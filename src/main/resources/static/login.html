@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CEMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+            max-width: 450px;
+            width: 100%;
+            animation: slideUp 0.6s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            text-align: center;
+            color: white;
+        }
+
+        .login-header h1 {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .login-header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .login-body {
+            padding: 40px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 30px;
+            transition: gap 0.3s;
+        }
+
+        .back-link:hover {
+            gap: 12px;
+        }
+
+        .tab-switcher {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 30px;
+            background: #f5f5f5;
+            padding: 5px;
+            border-radius: 12px;
+        }
+
+        .tab-btn {
+            padding: 12px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            font-size: 15px;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .login-form {
+            display: none;
+        }
+
+        .login-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.error {
+            background: #fee;
+            color: #c33;
+            border-left: 4px solid #c33;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+
+        .info-box {
+            background: #f0f7ff;
+            padding: 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-box p {
+            color: #1565c0;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        @media (max-width: 480px) {
+            .login-header {
+                padding: 30px 20px;
+            }
+
+            .login-header h1 {
+                font-size: 24px;
+            }
+
+            .login-body {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🎓 Welcome Back</h1>
+            <p>Sign in to access your dashboard</p>
+        </div>
+
+        <div class="login-body">
+            <a href="index.html" class="back-link">
+                ← Back to Home
+            </a>
+
+            <div class="message" id="message"></div>
+
+            <div class="tab-switcher">
+                <button class="tab-btn active" onclick="switchTab('student')">
+                    👨‍🎓 Student
+                </button>
+                <button class="tab-btn" onclick="switchTab('staff')">
+                    👔 Staff
+                </button>
+            </div>
+
+            <!-- Student Login Form -->
+            <form id="studentForm" class="login-form active">
+                <div class="info-box">
+                    <p>Students: Login using your Roll Number</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="studentRollNo">Roll Number</label>
+                    <input 
+                        type="text" 
+                        id="studentRollNo" 
+                        placeholder="Enter your roll number"
+                        required
+                        autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="studentPassword">Password</label>
+                    <input 
+                        type="password" 
+                        id="studentPassword" 
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn" id="studentLoginBtn">
+                    Login as Student
+                </button>
+            </form>
+
+            <!-- Staff Login Form -->
+            <form id="staffForm" class="login-form">
+                <div class="info-box">
+                    <p>Admin/HOD: Login using your Username</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="staffUsername">Username</label>
+                    <input 
+                        type="text" 
+                        id="staffUsername" 
+                        placeholder="Enter your username"
+                        required
+                        autocomplete="username">
+                </div>
+
+                <div class="form-group">
+                    <label for="staffPassword">Password</label>
+                    <input 
+                        type="password" 
+                        id="staffPassword" 
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn" id="staffLoginBtn">
+                    Login as Staff
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080';
+
+        // Tab Switching
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            document.querySelectorAll('.login-form').forEach(form => {
+                form.classList.remove('active');
+            });
+
+            if (type === 'student') {
+                document.getElementById('studentForm').classList.add('active');
+            } else {
+                document.getElementById('staffForm').classList.add('active');
+            }
+
+            hideMessage();
+        }
+
+        // Student Login
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const rollNo = document.getElementById('studentRollNo').value.trim();
+            const password = document.getElementById('studentPassword').value;
+            const btn = document.getElementById('studentLoginBtn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+            hideMessage();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login/student`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rollNo, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Login successful! Redirecting...', 'success');
+                    sessionStorage.setItem('user', JSON.stringify(data));
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showMessage(data.error || 'Invalid credentials', 'error');
+                }
+            } catch (error) {
+                showMessage('Unable to connect. Please ensure the server is running.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Login as Student';
+            }
+        });
+
+        // Staff Login
+        document.getElementById('staffForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('staffUsername').value.trim();
+            const password = document.getElementById('staffPassword').value;
+            const btn = document.getElementById('staffLoginBtn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Logging in...';
+            hideMessage();
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ loginId: username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('Login successful! Redirecting...', 'success');
+                    sessionStorage.setItem('user', JSON.stringify(data));
+                    
+                    setTimeout(() => {
+                        window.location.href = 'dashboard.html';
+                    }, 1000);
+                } else {
+                    showMessage(data.error || 'Invalid credentials', 'error');
+                }
+            } catch (error) {
+                showMessage('Unable to connect. Please ensure the server is running.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Login as Staff';
+            }
+        });
+
+        // Helper Functions
+        function showMessage(text, type) {
+            const msgEl = document.getElementById('message');
+            msgEl.textContent = text;
+            msgEl.className = `message show ${type}`;
+        }
+
+        function hideMessage() {
+            document.getElementById('message').className = 'message';
+        }
+
+        // Check if already logged in
+        window.addEventListener('load', () => {
+            const savedUser = sessionStorage.getItem('user');
+            if (savedUser) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,3578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEMS — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+        :root {
+            --bg:        #f4f3ef;
+            --surface:   #ffffff;
+            --sidebar:   #0f1117;
+            --sidebar-t: rgba(255,255,255,0.55);
+            --sidebar-a: #ffffff;
+            --accent:    #2f52e0;
+            --accent-lt: #eef1fd;
+            --ink:       #0d0d0d;
+            --muted:     #6b6b6b;
+            --line:      #e8e6e1;
+            --success:   #059669;
+            --danger:    #dc2626;
+            --warn:      #d97706;
+            --info:      #2563eb;
+            --radius:    12px;
+            --shadow:    0 1px 3px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.04);
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* ── Sidebar ────────────────────────────────────────── */
+        .sidebar {
+            width: 240px;
+            min-height: 100vh;
+            background: var(--sidebar);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 100;
+            transition: width 0.2s;
+        }
+
+        .sidebar-brand {
+            padding: 28px 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-dot {
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: var(--accent);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 14px; font-weight: 600; color: white; flex-shrink: 0;
+        }
+
+        .logo-text {
+            font-family: 'DM Serif Display', serif;
+            font-size: 18px;
+            color: white;
+            letter-spacing: -0.02em;
+        }
+
+        .sidebar-user {
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .user-avatar {
+            width: 56px; height: 56px; border-radius: 50%;
+            object-fit: cover; border: 2px solid rgba(255,255,255,0.3);
+            margin-bottom: 8px; display: block;
+        }
+        .user-avatar-placeholder {
+            width: 56px; height: 56px; border-radius: 50%;
+            background: rgba(47,82,224,0.35); border: 2px solid rgba(255,255,255,0.2);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; font-weight: 700; color: white;
+            margin-bottom: 8px;
+        }
+
+        .user-role-badge {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--accent);
+            background: rgba(47,82,224,0.15);
+            padding: 3px 8px;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
+        .user-name-sidebar {
+            font-size: 14px;
+            font-weight: 500;
+            color: white;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-sub-sidebar {
+            font-size: 12px;
+            color: var(--sidebar-t);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.3);
+            padding: 8px 12px 6px;
+            margin-top: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--sidebar-t);
+            font-size: 13.5px;
+            font-weight: 400;
+            transition: all 0.15s;
+            margin-bottom: 2px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.06);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(47,82,224,0.2);
+            color: white;
+        }
+
+        .nav-icon {
+            width: 18px; height: 18px;
+            opacity: 0.7;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid rgba(255,255,255,0.07);
+        }
+
+        .btn-logout-sidebar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            background: none;
+            color: rgba(255,255,255,0.4);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: left;
+        }
+
+        .btn-logout-sidebar:hover {
+            background: rgba(220,38,38,0.15);
+            color: #fca5a5;
+        }
+
+        /* ── Main content ────────────────────────────────────── */
+        .main-wrap {
+            margin-left: 240px;
+            flex: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--line);
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .topbar-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--ink);
+        }
+
+        .topbar-breadcrumb {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .topbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .topbar-time {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .main-content {
+            padding: 32px;
+            flex: 1;
+        }
+
+        /* ── Page header ─────────────────────────────────────── */
+        .page-header {
+            margin-bottom: 28px;
+        }
+
+        .page-header h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+            margin-bottom: 4px;
+        }
+
+        .page-header p {
+            font-size: 13px;
+            color: var(--muted);
+            font-weight: 300;
+        }
+
+        /* ── Stats grid ──────────────────────────────────────── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--line);
+            box-shadow: var(--shadow);
+            transition: transform 0.15s;
+        }
+
+        .stat-card:hover { transform: translateY(-2px); }
+
+        .stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        .stat-card.highlight {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .stat-card.highlight .stat-label,
+        .stat-card.highlight .stat-value { color: white; }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .stat-card.highlight .stat-sub { color: rgba(255,255,255,0.6); }
+
+        /* ── Alert ───────────────────────────────────────────── */
+        .alert {
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert.show, .alert[style*="display:block"], .alert[style*="display: block"] { display: block !important; }
+
+        /* ── Features grid ───────────────────────────────────── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .feature-card {
+            background: var(--surface);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 24px 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 24px rgba(47,82,224,0.12);
+        }
+
+        .feature-icon {
+            width: 44px; height: 44px;
+            background: var(--accent-lt);
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            margin-bottom: 16px;
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+            margin-bottom: 6px;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.6;
+            font-weight: 300;
+        }
+
+        /* ── Modal ───────────────────────────────────────────── */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--surface);
+            border-radius: 16px;
+            max-width: 820px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalIn 0.2s ease;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+        }
+
+        @keyframes modalIn {
+            from { opacity:0; transform: translateY(16px) scale(0.98); }
+            to   { opacity:1; transform: translateY(0)    scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 28px 20px;
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            background: var(--surface);
+            border-radius: 16px 16px 0 0;
+            z-index: 1;
+        }
+
+        .modal-header h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--ink);
+        }
+
+        .btn-close {
+            width: 32px; height: 32px;
+            border: none; background: var(--bg);
+            border-radius: 50%; cursor: pointer;
+            font-size: 18px; color: var(--muted);
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.15s;
+        }
+
+        .btn-close:hover { background: #e8e6e1; color: var(--ink); }
+
+        #modalBody { padding: 24px 28px 28px; }
+
+        #modalMessage {
+            margin: 0 28px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: none;
+        }
+
+        /* ── Form ────────────────────────────────────────────── */
+        .form-group { margin-bottom: 18px; }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 7px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(47,82,224,0.1);
+            background: white;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* ── Buttons ─────────────────────────────────────────── */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 500;
+            font-family: 'DM Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover:not(:disabled) {
+            background: #1a38b0;
+            transform: translateY(-1px);
+        }
+
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover:not(:disabled) { background: #047857; }
+
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover:not(:disabled) { background: #b91c1c; }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--ink);
+            border: 1px solid var(--line);
+        }
+
+        .btn-secondary:hover:not(:disabled) { background: #e8e6e1; }
+
+        /* ── Table ───────────────────────────────────────────── */
+        .table-container { overflow-x: auto; margin-top: 16px; }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .table th {
+            background: var(--bg);
+            padding: 10px 14px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+        }
+
+        .table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            color: var(--ink);
+            vertical-align: middle;
+        }
+
+        .table tr:last-child td { border-bottom: none; }
+
+        .table tr:hover td { background: var(--bg); }
+
+        /* ── Badges ──────────────────────────────────────────── */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .badge-success  { background: #d1fae5; color: #065f46; }
+        .badge-danger   { background: #fee2e2; color: #991b1b; }
+        .badge-warning  { background: #fef3c7; color: #92400e; }
+        .badge-info     { background: #dbeafe; color: #1e40af; }
+
+        /* ── Messages ────────────────────────────────────────── */
+        .message {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .message.show { display: block; }
+        .message-success { background:#d1fae5; color:#065f46; border-left:3px solid #059669; }
+        .message-error   { background:#fee2e2; color:#991b1b; border-left:3px solid #dc2626; }
+
+        .alert-danger  { background:#fee2e2; color:#991b1b; border-left:3px solid #dc2626; }
+        .alert-warning { background:#fef3c7; color:#92400e; border-left:3px solid #d97706; }
+
+        /* ── Loading ─────────────────────────────────────────── */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 48px 20px;
+            color: var(--muted);
+            font-size: 13px;
+            gap: 16px;
+        }
+
+        .spinner {
+            width: 32px; height: 32px;
+            border: 2px solid var(--line);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── Global message toast ────────────────────────────── */
+        #globalMessage {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 9999;
+            padding: 14px 20px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 500;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            display: none;
+            max-width: 360px;
+            animation: toastIn 0.25s ease;
+        }
+
+        @keyframes toastIn {
+            from { opacity:0; transform: translateY(8px); }
+            to   { opacity:1; transform: translateY(0); }
+        }
+
+        #globalMessage.show { display: block; }
+        #globalMessage.success { background: #065f46; color: white; }
+        #globalMessage.error   { background: #991b1b; color: white; }
+        #globalMessage.info    { background: var(--accent); color: white; }
+
+        /* ── Responsive ──────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .sidebar { width: 0; overflow: hidden; }
+            .main-wrap { margin-left: 0; }
+            .form-row { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .features-grid { grid-template-columns: 1fr 1fr; }
+            .main-content { padding: 20px; }
+        }
+
+        /* ── Extra utility ───────────────────────────────────── */
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--line);
+            margin: 20px 0;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 3px solid var(--accent);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            font-size: 13px;
+            color: #1e40af;
+            margin-bottom: 16px;
+        }
+
+        /* Dropdown modal list */
+        .dropdown-list {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .dropdown-item {
+            padding: 12px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--line);
+            transition: background 0.15s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: var(--bg); }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d4d1ca; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #b0ada6; }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="sidebar-logo">
+                <div class="logo-dot">C</div>
+                <div class="logo-text">CEMS</div>
+            </div>
+        </div>
+
+        <div class="sidebar-user">
+            <div id="userAvatarWrap">
+                <div class="user-avatar-placeholder" id="userAvatarPlaceholder">?</div>
+                <img id="userAvatarImg" class="user-avatar" src="" alt="" style="display:none;">
+            </div>
+            <div class="user-role-badge" id="userRole">Loading...</div>
+            <div class="user-name-sidebar" id="userName">Loading...</div>
+            <div class="user-sub-sidebar" id="userSub">College Exam System</div>
+        </div>
+
+        <nav class="sidebar-nav" id="sidebarNav">
+            <!-- Populated by JS based on role -->
+        </nav>
+
+        <div class="sidebar-footer">
+            <button class="btn-logout-sidebar" onclick="logout()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Sign out
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-wrap">
+        <header class="topbar">
+            <div>
+                <div class="topbar-title" id="topbarTitle">Dashboard</div>
+                <div class="topbar-breadcrumb" id="topbarSub">Loading...</div>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-time" id="topbarTime"></div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <!-- Welcome header -->
+            <div class="page-header">
+                <h1 id="welcomeMessage">Welcome</h1>
+                <p id="dashboardDescription">Loading your dashboard...</p>
+            </div>
+
+            <!-- Eligibility alert -->
+            <div id="eligibilityAlert" class="alert alert-danger"></div>
+
+            <!-- Stats -->
+            <div id="statsGrid" class="stats-grid" style="display:none;"></div>
+
+            <!-- Feature cards -->
+            <div id="featuresGrid" class="features-grid"></div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Title</h3>
+                <button class="btn-close" onclick="closeModal()">×</button>
+            </div>
+            <div id="modalMessage" class="message" style="margin:0 28px 0;"></div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Global toast message -->
+    <div id="globalMessage"></div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:8080';
+        let currentUser = null;
+
+        // ── Security helper: escape all server data before putting into innerHTML ──
+        function esc(v) {
+            return String(v == null ? '' : v)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                .replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+                .replace(/'/g,'&#39;');
+        }
+
+        // ── Initialize Dashboard ─────────────────────────────────────────────────
+        window.addEventListener('load', () => {
+            const savedUser = sessionStorage.getItem('user');
+            if (!savedUser) {
+                window.location.href = 'index.html';
+                return;
+            }
+            try {
+                currentUser = JSON.parse(savedUser);
+            } catch(e) {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+                return;
+            }
+            // NOTE: for full security, replace this with a /auth/me server call
+            // that validates the session token. The current setup trusts sessionStorage
+            // which can be modified in DevTools.
+            initializeDashboard();
+        });
+
+        // Initialize Dashboard
+        async function initializeDashboard() {
+            const name = currentUser.name || currentUser.username || 'User';
+            document.getElementById('userName').textContent = name;
+            document.getElementById('userRole').textContent = currentUser.role;
+
+            // Set avatar — use photo if available, else first letter
+            if (currentUser.photoPath) {
+                const filename = currentUser.photoPath.split(/[\/\\]/).pop();
+                const img = document.getElementById('userAvatarImg');
+                const ph  = document.getElementById('userAvatarPlaceholder');
+                img.src = API_BASE_URL + '/photos/view/' + filename;
+                img.onload = () => { img.style.display='block'; ph.style.display='none'; };
+                img.onerror = () => { img.style.display='none'; ph.style.display='flex'; };
+            } else {
+                document.getElementById('userAvatarPlaceholder').textContent = name.charAt(0).toUpperCase();
+            }
+
+            // Update clock
+            function updateClock() {
+                const now = new Date();
+                const el = document.getElementById('topbarTime');
+                if (el) el.textContent = now.toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'});
+            }
+            updateClock();
+            setInterval(updateClock, 60000);
+
+            const welcomeMsg = document.getElementById('welcomeMessage');
+            const dashDesc   = document.getElementById('dashboardDescription');
+
+            if (currentUser.role === 'ADMIN') {
+                welcomeMsg.textContent = 'Admin Dashboard';
+                dashDesc.textContent   = 'Departments, students, promotions and payment reports';
+                document.getElementById('topbarTitle').textContent = 'Admin Dashboard';
+                document.getElementById('topbarSub').textContent   = 'College Exam Management System';
+                document.getElementById('userSub').textContent     = 'Administrator';
+                buildAdminSidebar();
+                loadAdminFeatures();
+                loadAdminStats();
+
+            } else if (currentUser.role === 'HOD') {
+                welcomeMsg.textContent = `${currentUser.deptName || 'Department'} Dashboard`;
+                dashDesc.textContent   = 'Attendance, subject allocation and student monitoring';
+                document.getElementById('topbarTitle').textContent = 'HOD Dashboard';
+                document.getElementById('topbarSub').textContent   = currentUser.deptName || 'Department';
+                document.getElementById('userSub').textContent     = 'Head of Department';
+                buildHODSidebar();
+                loadHODFeatures();
+                loadHODStats();
+
+            } else if (currentUser.role === 'STUDENT') {
+                welcomeMsg.textContent = `Welcome, ${name}!`;
+                document.getElementById('topbarTitle').textContent = 'Student Dashboard';
+                document.getElementById('topbarSub').textContent   = `Roll No: ${currentUser.rollNo || ''}`;
+                document.getElementById('userSub').textContent     = `Sem ${currentUser.currentSemester || '—'} | DOB: ${formatDob(currentUser.dateOfBirth || '')}`;
+                document.getElementById('userSub').textContent     = `Semester ${currentUser.currentSemester || '—'}`;
+                buildStudentSidebar();
+
+                if (currentUser.programmeStatus === 'COMPLETED') {
+                    const alertEl = document.getElementById('eligibilityAlert');
+                    alertEl.innerHTML = `<div style="display:flex;align-items:center;gap:12px;"><span style="font-size:24px;">🎓</span><div><strong>Congratulations! Course Completed</strong><br><span style="font-size:13px;">All 8 semesters completed. You can still register and pay for pending arrears.</span></div></div>`;
+                    alertEl.className = 'alert';
+                    alertEl.style.cssText = 'display:block;background:#d1fae5;color:#065f46;border-left:3px solid #059669;padding:14px 18px;border-radius:10px;margin-bottom:20px;';
+                    dashDesc.textContent = `Roll No: ${currentUser.rollNo} | Semester 8 Completed`;
+                    document.getElementById('featuresGrid').innerHTML = `
+                        <div class="feature-card" onclick="viewMySubjects()"><div class="feature-icon">📖</div><div class="feature-title">My Subjects</div><div class="feature-desc">Registered subjects & arrears</div></div>
+                        <div class="feature-card" onclick="showAddArrear()"><div class="feature-icon">➕</div><div class="feature-title">Add Arrear</div><div class="feature-desc">Register for arrear exams</div></div>
+                        <div class="feature-card" onclick="viewFeesCompleted()"><div class="feature-icon">💰</div><div class="feature-title">Pay Arrear Fees</div><div class="feature-desc">Pay pending arrear fees</div></div>
+                        <div class="feature-card" onclick="viewMyReceipts()"><div class="feature-icon">🧾</div><div class="feature-title">My Receipts</div><div class="feature-desc">Download receipts</div></div>
+                        <div class="feature-card" onclick="viewSemesterHistory()"><div class="feature-icon">📋</div><div class="feature-title">Academic History</div><div class="feature-desc">All 8 semester records</div></div>
+                    `;
+                    return;
+                }
+
+                if (currentUser.eligibilityStatus === 'NOT_ELIGIBLE') {
+                    const alertEl = document.getElementById('eligibilityAlert');
+                    alertEl.innerHTML = `<strong>⚠️ Not Eligible</strong> — Attendance ${esc(currentUser.attendancePercentage || 0)}% (Min: 75%). Please meet the Discipline Committee.`;
+                    alertEl.style.display = 'block';
+                    dashDesc.textContent = `Roll No: ${currentUser.rollNo} | Sem ${currentUser.currentSemester} | NOT ELIGIBLE`;
+                } else {
+                    dashDesc.textContent = `Roll No: ${currentUser.rollNo} | Sem ${currentUser.currentSemester} | Attendance: ${currentUser.attendancePercentage}%`;
+                }
+                loadStudentFeatures();
+            }
+        }
+
+        function buildAdminSidebar() {
+            document.getElementById('sidebarNav').innerHTML = `
+                <div class="nav-section-label">Overview</div>
+                <button class="nav-item active" onclick="scrollToTop()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </button>
+                <div class="nav-section-label">Students</div>
+                <button class="nav-item" onclick="viewAllStudents()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    All Students
+                </button>
+                <button class="nav-item" onclick="viewPaidStudents()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Paid Students
+                </button>
+                <button class="nav-item" onclick="viewUnpaidStudents()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Unpaid Students
+                </button>
+                <button class="nav-item" onclick="viewArrearStudents()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/><path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/><path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/><path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/><path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/><path d="M15.5 19H14v1.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/><path d="M10 9.5C10 8.67 9.33 8 8.5 8H3.5C2.67 8 2 8.67 2 9.5S2.67 11 3.5 11h5c.83 0 1.5-.67 1.5-1.5z"/><path d="M8.5 5H10V3.5C10 2.67 9.33 2 8.5 2S7 2.67 7 3.5 7.67 5 8.5 5z"/></svg>
+                    Arrear Students
+                </button>
+                <div class="nav-section-label">Management</div>
+                <button class="nav-item" onclick="showPromoteSemesterAll()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 11 12 6 7 11"/><polyline points="17 18 12 13 7 18"/></svg>
+                    Promote Semester
+                </button>
+                <div class="nav-section-label">Reports</div>
+                <button class="nav-item" onclick="viewPaymentReports()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Payment Reports
+                </button>
+
+                <div class="nav-section-label">Settings</div>
+                <button class="nav-item" onclick="openAdminPanel()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    Admin Panel
+                </button>
+                <div class="nav-section-label">Account</div>
+                <button class="nav-item" onclick="showProfileSettings()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profile Settings
+                </button>
+            `;
+        }
+
+        function buildHODSidebar() {
+            document.getElementById('sidebarNav').innerHTML = `
+                <div class="nav-section-label">Overview</div>
+                <button class="nav-item active" onclick="scrollToTop()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </button>
+                <div class="nav-section-label">Students</div>
+                <button class="nav-item" onclick="viewDepartmentStudents()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                    My Students
+                </button>
+                <button class="nav-item" onclick="showUpdateAttendance()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    Update Attendance
+                </button>
+                <div class="nav-section-label">Subjects</div>
+                <button class="nav-item" onclick="showAllocateSubjects()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Allocate Subjects
+                </button>
+                <button class="nav-item" onclick="viewDepartmentSubjects()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    View Subjects
+                </button>
+                <div class="nav-section-label">Payments</div>
+                <button class="nav-item" onclick="showPaymentToggle()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Payment Control
+                </button>
+                <div class="nav-section-label">Account</div>
+                <button class="nav-item" onclick="showProfileSettings()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profile Settings
+                </button>
+            `;
+        }
+
+        function buildStudentSidebar() {
+            document.getElementById('sidebarNav').innerHTML = `
+                <div class="nav-section-label">Academics</div>
+                <button class="nav-item active" onclick="scrollToTop()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </button>
+                <button class="nav-item" onclick="viewMySubjects()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    My Subjects
+                </button>
+                <button class="nav-item" onclick="viewArrearHistory()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    Arrear History
+                </button>
+                <button class="nav-item" onclick="viewSemesterHistory()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Academic History
+                </button>
+                <div class="nav-section-label">Payments</div>
+                <button class="nav-item" onclick="viewFees ? viewFees() : null">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Pay Fees
+                </button>
+                <button class="nav-item" onclick="viewMyReceipts()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    My Receipts
+                </button>
+                <div class="nav-section-label">Account</div>
+                <button class="nav-item" onclick="showProfileSettings()">
+                    <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Profile Settings
+                </button>
+            `;
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+        }
+        // Load Admin Features
+        function loadAdminFeatures() {
+            document.getElementById('featuresGrid').innerHTML = `
+                <div class="feature-card" onclick="viewAllStudentsStat()">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-title">Total Students</div>
+                    <div class="feature-desc">All students allocated subjects across all departments</div>
+                </div>
+                <div class="feature-card" onclick="viewPaidStudents()">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-title">Paid Students</div>
+                    <div class="feature-desc">Students who have paid fees — dropdown with details</div>
+                </div>
+                <div class="feature-card" onclick="viewUnpaidStudents()">
+                    <div class="feature-icon">⚠️</div>
+                    <div class="feature-title">Unpaid Students</div>
+                    <div class="feature-desc">Students with pending fee payment</div>
+                </div>
+                <div class="feature-card" onclick="viewArrearStudents()">
+                    <div class="feature-icon">📝</div>
+                    <div class="feature-title">Arrear Students</div>
+                    <div class="feature-desc">Completed students registered for arrear exams</div>
+                </div>
+
+                <div class="feature-card" onclick="showPromoteSemesterAll()">
+                    <div class="feature-icon">⬆️</div>
+                    <div class="feature-title">Promote Semester — All</div>
+                    <div class="feature-desc">Promote all departments at once, data saved to DB</div>
+                </div>
+                <div class="feature-card" onclick="viewAllDepartments()">
+                    <div class="feature-icon">🏢</div>
+                    <div class="feature-title">All Departments</div>
+                    <div class="feature-desc">View and manage all departments</div>
+                </div>
+                <div class="feature-card" onclick="viewPaymentReports()">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-title">Payment Reports</div>
+                    <div class="feature-desc">Current + archived semester collection</div>
+                </div>
+            `;
+        }
+
+        // Load HOD Features
+        function loadHODFeatures() {
+            const grid = document.getElementById('featuresGrid');
+            grid.innerHTML = `
+                <div class="feature-card" onclick="showUpdateAttendance()">
+                    <div class="feature-icon">✅</div>
+                    <div class="feature-title">Update Attendance</div>
+                    <div class="feature-desc">Mark student attendance percentage</div>
+                </div>
+
+                <div class="feature-card" onclick="showAllocateSubjects()">
+                    <div class="feature-icon">📝</div>
+                    <div class="feature-title">Allocate Subjects</div>
+                    <div class="feature-desc">Assign subjects to eligible students</div>
+                </div>
+
+                <div class="feature-card" onclick="viewDepartmentStudents()">
+                    <div class="feature-icon">👥</div>
+                    <div class="feature-title">My Students</div>
+                    <div class="feature-desc">View students in your department</div>
+                </div>
+
+                <div class="feature-card" onclick="viewDepartmentSubjects()">
+                    <div class="feature-icon">📚</div>
+                    <div class="feature-title">Department Subjects</div>
+                    <div class="feature-desc">View all subjects in department</div>
+                </div>
+
+                <div class="feature-card" id="paymentToggleCard" onclick="showPaymentToggle()">
+                    <div class="feature-icon">💳</div>
+                    <div class="feature-title">Student Payment</div>
+                    <div class="feature-desc" id="paymentToggleDesc">Loading...</div>
+                </div>
+            `;
+            loadPaymentStatus();
+        }
+
+        async function loadPaymentStatus() {
+            if (!currentUser.deptId) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/departments/${currentUser.deptId}/payment-status`);
+                if (res.ok) {
+                    const data = await res.json();
+                    const desc = document.getElementById('paymentToggleDesc');
+                    const card = document.getElementById('paymentToggleCard');
+                    if (data.paymentEnabled) {
+                        desc.textContent = '🟢 Payment is ENABLED for students';
+                        card.style.borderColor = '#28a745';
+                        card.style.border = '2px solid #28a745';
+                    } else {
+                        desc.textContent = '🔴 Payment is DISABLED — click to enable';
+                        card.style.border = '2px solid #dc3545';
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function showPaymentToggle() {
+            if (!currentUser.deptId) return;
+            try {
+                const res = await fetch(`${API_BASE_URL}/departments/${currentUser.deptId}/payment-status`);
+                const data = await res.json();
+                const isEnabled = data.paymentEnabled;
+
+                openModal('Student Payment Control', `
+                    <div style="text-align:center;padding:20px 0;">
+                        <div style="font-size:60px;margin-bottom:20px;">${isEnabled ? '🟢' : '🔴'}</div>
+                        <h3 style="margin-bottom:10px;">Payment is currently <strong>${isEnabled ? 'ENABLED' : 'DISABLED'}</strong></h3>
+                        <p style="color:#666;margin-bottom:30px;">
+                            ${isEnabled
+                                ? 'Students can currently see and pay their examination fees.'
+                                : 'Students cannot see payment option until you enable it.'}
+                        </p>
+                        <button class="btn ${isEnabled ? 'btn-danger' : 'btn-success'}" 
+                            style="font-size:16px;padding:14px 40px;"
+                            onclick="togglePayment(${!isEnabled})">
+                            ${isEnabled ? '🔴 Disable Payment' : '🟢 Enable Payment for Students'}
+                        </button>
+                    </div>
+                `);
+            } catch(e) {
+                showMessage('Error loading payment status', 'error');
+            }
+        }
+
+        async function togglePayment(enable) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/departments/${currentUser.deptId}/payment-toggle`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: enable })
+                });
+                if (res.ok) {
+                    showMessage(`Payment ${enable ? 'ENABLED' : 'DISABLED'} for students successfully!`, 'success');
+                    closeModal();
+                    loadPaymentStatus();
+                } else {
+                    showMessage('Failed to update payment status', 'error');
+                }
+            } catch(e) {
+                showMessage('Error: ' + e.message, 'error');
+            }
+        }
+
+        // Load Student Features
+        async function loadStudentFeatures() {
+            const isEligible = currentUser.eligibilityStatus === 'ELIGIBLE';
+
+            // Check if HOD has enabled payment for this department
+            let paymentEnabled = false;
+            if (currentUser.deptId) {
+                try {
+                    const res = await fetch(`${API_BASE_URL}/departments/${currentUser.deptId}/payment-status`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        paymentEnabled = data.paymentEnabled;
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            const canPay    = isEligible && paymentEnabled;
+            const canArrear = isEligible && (currentUser.currentSemester || 1) > 1;
+
+            const grid = document.getElementById('featuresGrid');
+            grid.innerHTML = `
+                <div class="feature-card" onclick="viewMySubjects()">
+                    <div class="feature-icon">📖</div>
+                    <div class="feature-title">My Subjects</div>
+                    <div class="feature-desc">View allocated semester subjects</div>
+                </div>
+
+                ${canArrear ? `
+                <div class="feature-card" onclick="showAddArrear()">
+                    <div class="feature-icon">➕</div>
+                    <div class="feature-title">Add Arrear Subject</div>
+                    <div class="feature-desc">Register for arrear examinations</div>
+                </div>` : ''}
+
+                <div class="feature-card" onclick="${canPay ? 'viewFees()' : 'showPaymentNotReady()'}">
+                    <div class="feature-icon">💰</div>
+                    <div class="feature-title">Pay Fees</div>
+                    <div class="feature-desc">${canPay ? 'View and pay examination fees' : !isEligible ? '🔒 Not Eligible' : '🔒 Payment not yet opened by HOD'}</div>
+                </div>
+
+                <div class="feature-card" onclick="viewMyReceipts()">
+                    <div class="feature-icon">🧾</div>
+                    <div class="feature-title">My Receipts</div>
+                    <div class="feature-desc">Download payment receipts</div>
+                </div>
+            `;
+        }
+
+        function showPaymentNotReady() {
+            openModal('Payment Not Available', `
+                <div class="alert alert-warning" style="display:block;">
+                    <strong>⏳ Payment Not Yet Opened</strong><br><br>
+                    Your HOD has not opened the payment window yet.<br><br>
+                    Please wait until your HOD enables payment for your department.
+                </div>
+            `);
+        }
+
+        function showNoArrearsPending() {
+            openModal('No Pending Arrears', `
+                <div style="text-align:center;padding:30px 20px;color:#64748b;">
+                    <div style="font-size:40px;margin-bottom:12px;">✅</div>
+                    <p style="font-size:15px;font-weight:600;margin-bottom:8px;">No pending arrear fees</p>
+                    <p style="font-size:14px;">You have no unpaid arrear registrations. Use "Add Arrear Subject" to register for a new arrear exam first.</p>
+                </div>
+            `);
+        }
+
+        // Load Admin Stats
+        async function loadAdminStats() {
+            // Stats are available via the feature cards (Total Students, Paid, Unpaid etc.)
+            // Hide the stats grid for admin
+            const statsGrid = document.getElementById('statsGrid');
+            if (statsGrid) statsGrid.style.display = 'none';
+        }
+
+        // Load HOD Stats
+        async function loadHODStats() {
+            if (!currentUser.deptId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/students/dept/${currentUser.deptId}`);
+                if (response.ok) {
+                    const students = await response.json();
+                    const eligible = students.filter(s => s.eligibilityStatus === 'ELIGIBLE').length;
+                    const notEligible = students.filter(s => s.eligibilityStatus === 'NOT_ELIGIBLE').length;
+                    
+                    const statsGrid = document.getElementById('statsGrid');
+                    statsGrid.style.display = 'grid';
+                    statsGrid.innerHTML = `
+                        <div class="stat-card">
+                            <div class="stat-value">${students.length}</div>
+                            <div class="stat-label">Total Students</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${eligible}</div>
+                            <div class="stat-label">Eligible</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value">${notEligible}</div>
+                            <div class="stat-label">Not Eligible</div>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Modal Functions
+        function openModal(title, body) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = body;
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            hideMessage();
+        }
+
+        function showMessage(message, type = 'success') {
+            // Update modal message if modal is open
+            const msgEl = document.getElementById('modalMessage');
+            if (msgEl) {
+                msgEl.textContent = message;
+                msgEl.className = `message message-${type} show`;
+            }
+            // Also show toast
+            const toast = document.getElementById('globalMessage');
+            if (toast) {
+                toast.textContent = message;
+                toast.className = `show ${type}`;
+                clearTimeout(window._toastTimer);
+                window._toastTimer = setTimeout(() => { toast.className = ''; }, 4000);
+            }
+        }
+
+        function hideMessage() {
+            const msgEl = document.getElementById('modalMessage');
+            if (msgEl) msgEl.className = 'message';
+        }
+
+        // ── New Admin Panel Functions (from spec) ─────────────────
+
+        async function viewAllStudentsStat() {
+            openModal('All Students — Allocated Subjects', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+            try {
+                const [studRes, deptRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/students/all`),
+                    fetch(`${API_BASE_URL}/departments/all`)
+                ]);
+                const allStudents = studRes.ok ? await studRes.json() : [];
+                const depts       = deptRes.ok ? await deptRes.json() : [];
+
+                // Exclude COMPLETED (graduated) students
+                const students = allStudents.filter(s => s.programmeStatus !== 'COMPLETED');
+
+                // Group by department
+                const byDept = {};
+                depts.forEach(d => byDept[d.deptId] = { name: d.deptName, students: [] });
+                students.forEach(s => {
+                    const dId = s.department?.deptId;
+                    if (byDept[dId]) byDept[dId].students.push(s);
+                });
+
+                // Only show departments that have active students
+                const activeDepts = Object.values(byDept).filter(d => d.students.length > 0);
+
+                const sections = activeDepts.map(d => `
+                    <div style="margin-bottom:20px;">
+                        <div style="font-size:12px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">
+                            ${d.name} — ${d.students.length} student${d.students.length !== 1 ? 's' : ''}
+                        </div>
+                        <div class="table-container" style="margin-top:0;">
+                            <table class="table">
+                                <thead><tr><th>Name</th><th>Roll No</th><th>Semester</th><th>Attendance</th><th>Status</th></tr></thead>
+                                <tbody>
+                                    ${d.students.map(s => `<tr>
+                                        <td style="font-weight:500;">${esc(s.name)}</td>
+                                        <td style="font-size:12px;color:var(--muted);">${esc(s.rollNo)}</td>
+                                        <td><span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">Sem ${esc(s.currentSemester || "—")}</span></td>
+                                        <td style="font-weight:500;color:${(s.attendancePercentage||0)>=75?'var(--success)':'var(--danger)'};">${esc(s.attendancePercentage||0)}%</td>
+                                        <td><span class="badge badge-${s.eligibilityStatus==='ELIGIBLE'?'success':'danger'}">${esc(s.eligibilityStatus||'—')}</span></td>
+                                    </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>`).join('');
+
+                document.getElementById('modalBody').innerHTML =
+                    `<div style="margin-bottom:16px;font-size:13px;color:var(--muted);">Total: <strong style="color:var(--ink);">${students.length} active students</strong> across ${activeDepts.length} department${activeDepts.length !== 1 ? 's' : ''}</div>`
+                    + (sections || `<div style="text-align:center;padding:40px;color:var(--muted);">No active students found</div>`);
+            } catch(e) { showMessage('Error: ' + e.message, 'error'); }
+        }
+
+        async function viewPaidStudents() {
+            openModal('Paid Students', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+            try {
+                const studRes = await fetch(`${API_BASE_URL}/students/all`);
+                const allStudents = studRes.ok ? await studRes.json() : [];
+                const students = allStudents.filter(s => s.programmeStatus !== 'COMPLETED');
+
+                if (students.length === 0) {
+                    renderStudentDropdownModal([], 'Paid Students', 'success'); return;
+                }
+
+                // Query per dept+semester combination — each student checked against their OWN semester
+                const deptSemPairs = [...new Set(
+                    students.filter(s => s.department?.deptId && s.currentSemester)
+                            .map(s => `${s.department.deptId}:${s.currentSemester}`)
+                )];
+
+                const paidSet = new Set();
+                await Promise.all(deptSemPairs.map(async pair => {
+                    const [dId, sem] = pair.split(':');
+                    try {
+                        const r = await fetch(`${API_BASE_URL}/payments/dept/${dId}/paid-student-ids?semester=${sem}`);
+                        if (r.ok) (await r.json()).forEach(id => paidSet.add(Number(id)));
+                    } catch(e) {}
+                }));
+
+                const paid = students.filter(s => paidSet.has(Number(s.studentId)));
+                renderStudentDropdownModal(paid, `Paid Students (current semester)`, 'success');
+            } catch(e) { showMessage('Error: ' + e.message, 'error'); }
+        }
+
+        async function viewUnpaidStudents() {
+            openModal('Unpaid Students', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+            try {
+                const studRes = await fetch(`${API_BASE_URL}/students/all`);
+                const allStudents = studRes.ok ? await studRes.json() : [];
+                const students = allStudents.filter(s => s.programmeStatus !== 'COMPLETED');
+
+                if (students.length === 0) {
+                    renderStudentDropdownModal([], 'Unpaid Students', 'danger'); return;
+                }
+
+                const deptSemPairs = [...new Set(
+                    students.filter(s => s.department?.deptId && s.currentSemester)
+                            .map(s => `${s.department.deptId}:${s.currentSemester}`)
+                )];
+
+                const paidSet = new Set();
+                await Promise.all(deptSemPairs.map(async pair => {
+                    const [dId, sem] = pair.split(':');
+                    try {
+                        const r = await fetch(`${API_BASE_URL}/payments/dept/${dId}/paid-student-ids?semester=${sem}`);
+                        if (r.ok) (await r.json()).forEach(id => paidSet.add(Number(id)));
+                    } catch(e) {}
+                }));
+
+                const unpaid = students.filter(s => !paidSet.has(Number(s.studentId)));
+                renderStudentDropdownModal(unpaid, `Unpaid Students (current semester)`, 'danger');
+            } catch(e) { showMessage('Error: ' + e.message, 'error'); }
+        }
+
+        async function viewArrearStudents() {
+            openModal('Arrear Students', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+            try {
+                // Get all students who have ARREAR registrations
+                const studRes = await fetch(`${API_BASE_URL}/students/all`);
+                const students = studRes.ok ? await studRes.json() : [];
+
+                // Check each completed student for arrear registrations
+                const completedStudents = students.filter(s => s.programmeStatus === 'COMPLETED');
+
+                const arrearData = [];
+                await Promise.all(completedStudents.map(async s => {
+                    try {
+                        const r = await fetch(`${API_BASE_URL}/exam-registration/student/${s.studentId}`);
+                        if (r.ok) {
+                            const regs = await r.json();
+                            const arrears = regs.filter(reg => reg.type === 'ARREAR');
+                            if (arrears.length > 0) {
+                                arrearData.push({ student: s, arrears });
+                            }
+                        }
+                    } catch(e) {}
+                }));
+
+                if (arrearData.length === 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div style="text-align:center;padding:48px 20px;color:var(--muted);">
+                            <div style="font-size:40px;margin-bottom:12px;">📝</div>
+                            <p style="font-size:14px;font-weight:500;">No arrear students found</p>
+                            <p style="font-size:13px;margin-top:6px;">Completed students who register for arrear subjects will appear here</p>
+                        </div>`;
+                    return;
+                }
+
+                const rows = arrearData.map(d => `
+                    <tr>
+                        <td style="font-weight:500;">${esc(d.student.name)}</td>
+                        <td style="font-size:12px;color:var(--muted);">${d.student.rollNo}</td>
+                        <td>${d.student.department?.deptName || '—'}</td>
+                        <td>
+                            ${d.arrears.map(a => `
+                                <span style="display:inline-block;background:${a.payment?'#d1fae5':'#fef3c7'};color:${a.payment?'#065f46':'#92400e'};padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;margin:2px;">
+                                    ${a.subject?.subjectCode||'?'} ${a.payment?'✓ Paid':'Unpaid'}
+                                </span>`).join('')}
+                        </td>
+                    </tr>`).join('');
+
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="margin-bottom:16px;font-size:13px;color:var(--muted);">${arrearData.length} student${arrearData.length!==1?'s':''} with arrear registrations</div>
+                    <div class="table-container" style="margin-top:0;">
+                        <table class="table">
+                            <thead><tr><th>Name</th><th>Roll No</th><th>Department</th><th>Arrear Subjects</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            } catch(e) { showMessage('Error: ' + e.message, 'error'); }
+        }
+
+        function renderStudentDropdownModal(students, title, badgeType) {
+            if (students.length === 0) {
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="text-align:center;padding:48px 20px;color:var(--muted);">
+                        <div style="font-size:40px;margin-bottom:12px;">${badgeType==='success'?'✅':'⚠️'}</div>
+                        <p style="font-size:14px;font-weight:500;">No students found</p>
+                    </div>`;
+                return;
+            }
+
+            // Group by department
+            const byDept = {};
+            students.forEach(s => {
+                const dName = s.department?.deptName || 'Unknown';
+                if (!byDept[dName]) byDept[dName] = [];
+                byDept[dName].push(s);
+            });
+
+            const sections = Object.entries(byDept).map(([dName, dStudents]) => `
+                <details style="margin-bottom:12px;border:1px solid var(--line);border-radius:10px;overflow:hidden;">
+                    <summary style="padding:14px 18px;cursor:pointer;font-weight:600;font-size:14px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;list-style:none;">
+                        <span>${dName}</span>
+                        <span class="badge badge-${badgeType}">${dStudents.length} students</span>
+                    </summary>
+                    <table class="table" style="margin:0;">
+                        <thead><tr><th>Name</th><th>Roll No</th><th>Semester</th><th>Attendance</th></tr></thead>
+                        <tbody>
+                            ${dStudents.map(s => `<tr>
+                                <td style="font-weight:500;">${esc(s.name)}</td>
+                                <td style="font-size:12px;color:var(--muted);">${esc(s.rollNo)}</td>
+                                <td><span style="background:#e0e7ff;color:#3730a3;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;">Sem ${s.currentSemester||'—'}</span></td>
+                                <td style="color:${(s.attendancePercentage||0)>=75?'var(--success)':'var(--danger)'};font-weight:500;">${esc(s.attendancePercentage||0)}%</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </details>`).join('');
+
+            document.getElementById('modalBody').innerHTML = `
+                <div style="margin-bottom:16px;font-size:13px;color:var(--muted);">${title} — <strong style="color:var(--ink);">${students.length} total</strong></div>
+                ${sections}`;
+        }
+
+        async function showPromoteSemesterAll() {
+            let deptOptions = '';
+            try {
+                const res = await fetch(`${API_BASE_URL}/departments/all`);
+                if (res.ok) {
+                    const depts = await res.json();
+                    deptOptions = depts.map(d => `<option value="${d.deptId}">${esc(d.deptName)}</option>`).join('');
+                }
+            } catch(e) {}
+
+            openModal('Promote Semester — All Departments', `
+                <div class="info-box">Promotes ALL departments at once for the selected semester. Data is saved to DB and the admin dashboard refreshes automatically.</div>
+                <div class="form-group">
+                    <label>Semester to promote from</label>
+                    <select id="promoteAllSem" onchange="updatePromoteAllInfo()">
+                        <option value="">Select semester</option>
+                        ${[1,2,3,4,5,6,7].map(n => `<option value="${n}">Semester ${n} → ${n+1}</option>`).join('')}
+                        <option value="8" style="color:var(--success);font-weight:600;">Semester 8 → 🎓 Graduation</option>
+                    </select>
+                </div>
+                <div id="promoteAllInfo" style="display:none;padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:16px;"></div>
+                <div id="promoteAllResults"></div>
+                <button class="btn btn-primary" style="width:100%;" id="promoteAllBtn" onclick="doPromoteAll()">Promote All Departments</button>
+            `);
+        }
+
+        function updatePromoteAllInfo() {
+            const sem = parseInt(document.getElementById('promoteAllSem')?.value);
+            const box = document.getElementById('promoteAllInfo');
+            if (!box || !sem) return;
+            box.style.display = 'block';
+            if (sem === 8) {
+                box.style.cssText = 'display:block;background:#d1fae5;color:#065f46;border-left:3px solid #059669;padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;margin-bottom:16px;';
+                box.innerHTML = '🎓 <strong>Graduation Mode</strong> — Eligible Sem 8 students will be marked COMPLETED across all departments.';
+            } else {
+                box.style.cssText = 'display:block;background:#eff6ff;color:#1e40af;border-left:3px solid var(--accent);padding:12px 16px;border-radius:0 8px 8px 0;font-size:13px;margin-bottom:16px;';
+                box.innerHTML = `Promotes Semester ${sem} → ${sem+1} for ALL departments. Attendance resets. Data archived.`;
+            }
+        }
+
+        async function doPromoteAll() {
+            const sem = document.getElementById('promoteAllSem')?.value;
+            if (!sem) { showMessage('Please select a semester', 'error'); return; }
+
+            const btn = document.getElementById('promoteAllBtn');
+            btn.disabled = true; btn.textContent = 'Promoting…';
+
+            try {
+                const deptRes = await fetch(`${API_BASE_URL}/departments/all`);
+                if (!deptRes.ok) throw new Error('Failed to load departments');
+                const depts = await deptRes.json();
+
+                const results = [];
+                for (const dept of depts) {
+                    try {
+                        const r = await fetch(`${API_BASE_URL}/students/promote`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ deptId: dept.deptId, currentSemester: parseInt(sem) })
+                        });
+                        const data = await r.json();
+                        results.push({ dept: dept.deptName, ok: r.ok, data });
+                    } catch(e) {
+                        results.push({ dept: dept.deptName, ok: false, data: { error: e.message } });
+                    }
+                }
+
+                const resultHtml = results.map(r => `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);">
+                        <span style="font-size:13px;font-weight:500;">${esc(r.dept)}</span>
+                        <span class="badge badge-${r.ok?'success':'warning'}">${r.ok ? (r.data.studentsPromoted||0)+' promoted'+(r.data.studentsGraduated?', '+r.data.studentsGraduated+' graduated':'') : r.data.error||'no eligible students'}</span>
+                    </div>`).join('');
+
+                document.getElementById('promoteAllResults').innerHTML = `
+                    <div style="border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:16px;">
+                        <div style="padding:10px 14px;background:var(--bg);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Results</div>
+                        ${resultHtml}
+                    </div>`;
+
+                showMessage(`Promotion complete for ${results.length} departments`, 'success');
+                loadAdminStats(); // Refresh stats
+
+            } catch(e) {
+                showMessage('Error: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Promote All Departments';
+            }
+        }
+
+        // Feature Functions - ADMIN
+        function showCreateDepartment() {
+            openModal('Create Department', `
+                <div class="form-group">
+                    <label>Department Name</label>
+                    <input type="text" id="deptName" placeholder="e.g., Computer Science and Engineering">
+                </div>
+                <button class="btn btn-primary" onclick="createDepartment()">Create Department</button>
+            `);
+        }
+
+        async function createDepartment() {
+            const deptName = document.getElementById('deptName').value.trim();
+            if (!deptName) {
+                showMessage('Please enter department name', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/departments/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deptName })
+                });
+
+                if (response.ok) {
+                    showMessage('Department created successfully!', 'success');
+                    document.getElementById('deptName').value = '';
+                } else {
+                    showMessage('Failed to create department', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        function showCreateSubject() {
+            openModal('Create Subject', `
+                <div class="form-group">
+                    <label>Subject Name</label>
+                    <input type="text" id="subjectName" placeholder="e.g., Data Structures">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Department ID</label>
+                        <input type="number" id="subjectDeptId" placeholder="e.g., 1">
+                    </div>
+                    <div class="form-group">
+                        <label>Semester</label>
+                        <input type="number" id="subjectSemester" min="1" max="8" placeholder="e.g., 3">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Subject Type</label>
+                    <select id="subjectType">
+                        <option value="THEORY">Theory (₹400)</option>
+                        <option value="PRACTICAL">Practical (₹400)</option>
+                        <option value="INTEGRATED">Integrated (₹800)</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="createSubject()">Create Subject</button>
+            `);
+        }
+
+        async function createSubject() {
+            const name = document.getElementById('subjectName').value.trim();
+            const deptId = document.getElementById('subjectDeptId').value;
+            const semester = document.getElementById('subjectSemester').value;
+            const type = document.getElementById('subjectType').value;
+
+            if (!name || !deptId || !semester) {
+                showMessage('Please fill all fields', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/subjects/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        department: { deptId: parseInt(deptId) },
+                        semester: parseInt(semester),
+                        type
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('Subject created successfully!', 'success');
+                    document.getElementById('subjectName').value = '';
+                } else {
+                    showMessage('Failed to create subject', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function showPromoteSemester() {
+            let deptOptions = '<option value="">Select Department</option>';
+            try {
+                const res = await fetch(`${API_BASE_URL}/departments/all`);
+                if (res.ok) {
+                    const depts = await res.json();
+                    deptOptions += depts.map(d =>
+                        `<option value="${d.deptId}">${esc(d.deptName)}</option>`
+                    ).join('');
+                }
+            } catch(e) {}
+
+            openModal('Bulk Semester Promotion / Graduation', `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Department</label>
+                        <select id="promoteDeptId">${deptOptions}</select>
+                    </div>
+                    <div class="form-group">
+                        <label>Current Semester</label>
+                        <select id="currentSem" onchange="updatePromoteInfo()">
+                            <option value="">Select Semester</option>
+                            ${[1,2,3,4,5,6,7].map(n =>
+                                `<option value="${n}">Semester ${n} → ${n+1}</option>`
+                            ).join('')}
+                            <option value="8" style="color:#059669;font-weight:600;">
+                                Semester 8 → 🎓 Mark as Graduated
+                            </option>
+                        </select>
+                    </div>
+                </div>
+                <div id="promoteInfoBox" class="alert alert-info" style="display:block;margin-bottom:16px;">
+                    Select a semester above to see what will happen.
+                </div>
+                <button class="btn btn-primary" onclick="promoteSemester()" style="width:100%;">
+                    Confirm Promotion
+                </button>
+            `);
+        }
+
+        function updatePromoteInfo() {
+            const sem = parseInt(document.getElementById('currentSem')?.value);
+            const box = document.getElementById('promoteInfoBox');
+            if (!box) return;
+            if (sem === 8) {
+                box.style.cssText = 'display:block;background:#d1fae5;color:#065f46;border-left:4px solid #059669;padding:12px 16px;border-radius:8px;margin-bottom:16px;';
+                box.innerHTML = `<strong>🎓 Graduation Mode</strong><br>
+                    Eligible Semester 8 students will be marked as <strong>COMPLETED</strong>.<br>
+                    Their dashboard will show "Course Completed" — no more exam/payment options.<br>
+                    All historical data (receipts, registrations) stays preserved.`;
+            } else if (sem >= 1) {
+                box.style.cssText = 'display:block;background:#dbeafe;color:#1e40af;border-left:4px solid #3b82f6;padding:12px 16px;border-radius:8px;margin-bottom:16px;';
+                box.innerHTML = `<strong>Semester ${sem} → ${sem+1} Promotion</strong><br>
+                    ✅ Only ELIGIBLE students (attendance ≥ 75%) are promoted.<br>
+                    🔄 Attendance resets to 0% for Semester ${sem+1}.<br>
+                    💾 Semester ${sem} data archived in history.`;
+            }
+        }
+
+        async function promoteSemester() {
+            const deptId          = document.getElementById('promoteDeptId').value;
+            const currentSemester = document.getElementById('currentSem').value;
+
+            if (!deptId || !currentSemester) {
+                showMessage('Please select both department and semester', 'error'); return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/students/promote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deptId: parseInt(deptId),
+                        currentSemester: parseInt(currentSemester)
+                    })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    const archived = result.collectionArchived > 0
+                        ? ` ₹${Number(result.collectionArchived).toLocaleString()} archived.`
+                        : '';
+                    const paid   = result.paidStudents   != null ? ` ${result.paidStudents} paid,` : '';
+                    const unpaid = result.unpaidStudents != null ? ` ${result.unpaidStudents} unpaid.` : '';
+                    showMessage(result.message + paid + unpaid + archived, 'success');
+                    // Refresh HOD stats if visible
+                    if (currentUser.role === 'HOD') loadHODStats();
+                    if (currentUser.role === 'ADMIN') loadAdminStats();
+                } else {
+                    showMessage(result.error || 'Promotion failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function viewAllStudents() {
+            openModal('All Students', `
+                <div id="studentsTableWrap">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>`);
+
+            try {
+                const studRes = await fetch(`${API_BASE_URL}/students/all`);
+                if (!studRes.ok) { showMessage('Failed to load students', 'error'); return; }
+                const students = await studRes.json();
+
+                if (students.length === 0) { displayStudentsTable([], new Set()); return; }
+
+                // Group by dept+semester, query backend per pair
+                // Backend uses p.semester tag — accurate per student per semester
+                const deptSemPairs = [...new Set(
+                    students
+                        .filter(s => s.programmeStatus !== 'COMPLETED' && s.department?.deptId && s.currentSemester)
+                        .map(s => `${s.department.deptId}:${s.currentSemester}`)
+                )];
+
+                const paidSet = new Set();
+                await Promise.all(deptSemPairs.map(async pair => {
+                    const [deptId, sem] = pair.split(':');
+                    try {
+                        const res = await fetch(
+                            `${API_BASE_URL}/payments/dept/${deptId}/paid-student-ids?semester=${sem}`
+                        );
+                        if (res.ok) {
+                            const ids = await res.json();
+                            ids.forEach(id => paidSet.add(Number(id)));
+                        }
+                    } catch(e) {}
+                }));
+
+                displayStudentsTable(students, paidSet);
+
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        function displayStudentsTable(students, paidStudentIds) {
+            const activeStudents = (students || []).filter(s => s.programmeStatus !== 'COMPLETED');
+
+            if (activeStudents.length === 0) {
+                document.getElementById('studentsTableWrap').innerHTML = `
+                    <div style="text-align:center;padding:40px 20px;color:#64748b;">
+                        <div style="font-size:40px;margin-bottom:12px;">&#128101;</div>
+                        <p style="font-size:15px;font-weight:600;">No active students found</p>
+                    </div>`;
+                return;
+            }
+
+            // paidSet uses p.semester from ExamFeePayment — stamped at payment time.
+            // Mohamed paid Sem 2 → p.semester=2. Querying Sem 3 returns nothing for him. Accurate.
+            const paidSet = paidStudentIds instanceof Set
+                ? paidStudentIds
+                : paidStudentIds instanceof Map
+                    ? new Set([...paidStudentIds.entries()]
+                        .filter(([id, sem]) => {
+                            const s = activeStudents.find(st => Number(st.studentId) === id);
+                            return s && s.currentSemester === sem;
+                        })
+                        .map(([id]) => id))
+                    : new Set((paidStudentIds || []).map(Number));
+
+            const rows = activeStudents.map(s => {
+                const paid     = paidSet.has(Number(s.studentId));
+                const att      = s.attendancePercentage != null ? s.attendancePercentage : 0;
+                const attColor = att >= 75 ? '#15803d' : '#dc2626';
+                return `
+                    <tr>
+                        <td style="font-weight:600;">${esc(s.name)}</td>
+                        <td style="font-size:12px;color:#64748b;">${esc(s.rollNo)}</td>
+                        <td>${s.department?.deptName || 'N/A'}</td>
+                        <td style="text-align:center;">
+                            <span style="background:#e0e7ff;color:#3730a3;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;">
+                                Sem ${s.currentSemester || '&mdash;'}
+                            </span>
+                        </td>
+                        <td style="font-weight:600;color:${attColor};">${att}%</td>
+                        <td style="text-align:center;">
+                            <span class="badge ${paid ? 'badge-success' : 'badge-warning'}">
+                                ${paid ? 'Paid' : 'Unpaid'}
+                            </span>
+                        </td>
+                    </tr>`;
+            }).join('');
+
+            document.getElementById('studentsTableWrap').innerHTML = `
+                <div class="table-container" style="margin-top:12px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Roll No</th>
+                                <th>Department</th>
+                                <th style="text-align:center;">Semester</th>
+                                <th>Attendance</th>
+                                <th style="text-align:center;">Fee Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
+                <div style="margin-top:8px;font-size:12px;color:#94a3b8;text-align:right;">
+                    ${activeStudents.length} student${activeStudents.length !== 1 ? 's' : ''}
+                </div>`;
+        }
+
+        async function viewDepartmentStudents() {
+            if (!currentUser.deptId) {
+                showMessage('Department ID not found', 'error'); return;
+            }
+
+            openModal('My Department Students', `
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+                    <div style="display:flex;gap:6px;">
+                        <button id="filterAll" onclick="filterStudents('all')"
+                            style="padding:7px 18px;border-radius:8px;border:2px solid #667eea;background:#667eea;color:white;font-weight:600;font-size:13px;cursor:pointer;">
+                            All Students
+                        </button>
+                        <button id="filterSem" onclick="filterStudents('semester')"
+                            style="padding:7px 18px;border-radius:8px;border:2px solid #667eea;background:white;color:#667eea;font-weight:600;font-size:13px;cursor:pointer;">
+                            By Semester
+                        </button>
+                    </div>
+                    <select id="semesterPicker" onchange="filterStudents('semester')"
+                        style="display:none;padding:7px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;">
+                        ${[1,2,3,4,5,6,7,8].map(n =>
+                            `<option value="${n}"${n === (currentUser.currentSemester || 1) ? ' selected' : ''}>Semester ${n}</option>`
+                        ).join('')}
+                    </select>
+                </div>
+                <div id="studentsTableWrap">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>
+            `);
+
+            // Load all data upfront
+            await loadDeptStudents('all');
+        }
+
+        async function filterStudents(mode) {
+            // Toggle button styles
+            const allBtn = document.getElementById('filterAll');
+            const semBtn = document.getElementById('filterSem');
+            const picker = document.getElementById('semesterPicker');
+            if (!allBtn) return;
+
+            if (mode === 'all') {
+                allBtn.style.background = '#667eea'; allBtn.style.color = 'white';
+                semBtn.style.background = 'white';   semBtn.style.color = '#667eea';
+                picker.style.display = 'none';
+            } else {
+                semBtn.style.background = '#667eea'; semBtn.style.color = 'white';
+                allBtn.style.background = 'white';   allBtn.style.color = '#667eea';
+                picker.style.display = 'inline-block';
+            }
+            await loadDeptStudents(mode);
+        }
+
+        async function loadDeptStudents(mode) {
+            const wrap = document.getElementById('studentsTableWrap');
+            if (wrap) wrap.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+            try {
+                const sem = document.getElementById('semesterPicker')?.value;
+                const studUrl = mode === 'semester'
+                    ? `${API_BASE_URL}/students/dept/${currentUser.deptId}/semester/${sem}`
+                    : `${API_BASE_URL}/students/dept/${currentUser.deptId}`;
+
+                const studRes = await fetch(studUrl);
+                if (!studRes.ok) { showMessage('Failed to load students', 'error'); return; }
+                const students = await studRes.json();
+
+                if (students.length === 0) { displayStudentsTable([], new Set()); return; }
+
+                // Each semester is queried separately — backend uses p.semester tag
+                // so only students who paid FOR THIS SPECIFIC SEMESTER are returned
+                const semesters = [...new Set(students.map(s => s.currentSemester).filter(Boolean))];
+                const paidSet = new Set();
+
+                await Promise.all(semesters.map(async (sem) => {
+                    try {
+                        const res = await fetch(
+                            `${API_BASE_URL}/payments/dept/${currentUser.deptId}/paid-student-ids?semester=${sem}`
+                        );
+                        if (res.ok) {
+                            const ids = await res.json();
+                            ids.forEach(id => paidSet.add(Number(id)));
+                        }
+                    } catch(e) {}
+                }));
+
+                displayStudentsTable(students, paidSet);
+
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function viewAllDepartments() {
+            openModal('All Departments', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/departments/all`);
+                if (response.ok) {
+                    const departments = await response.json();
+                    const tableHTML = `
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Department Name</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${departments.map(d => `
+                                        <tr>
+                                            <td>${d.deptId}</td>
+                                            <td>${esc(d.deptName)}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    document.getElementById('modalBody').innerHTML = tableHTML;
+                } else {
+                    showMessage('Failed to load departments', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function viewPaymentReports() {
+            openModal('Payment Reports', `
+                <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+                    <button id="tabCurrent" onclick="switchReportTab('current')"
+                        style="padding:7px 18px;border-radius:8px;border:2px solid #667eea;background:#667eea;color:white;font-weight:600;font-size:13px;cursor:pointer;">
+                        Current Collection
+                    </button>
+                    <button id="tabHistory" onclick="switchReportTab('history')"
+                        style="padding:7px 18px;border-radius:8px;border:2px solid #667eea;background:white;color:#667eea;font-weight:600;font-size:13px;cursor:pointer;">
+                        Semester History
+                    </button>
+                </div>
+                <div id="reportContent">
+                    <div class="loading"><div class="spinner"></div>Loading...</div>
+                </div>
+            `);
+            await loadReportTab('current');
+        }
+
+        async function switchReportTab(tab) {
+            const cur = document.getElementById('tabCurrent');
+            const his = document.getElementById('tabHistory');
+            if (!cur) return;
+            if (tab === 'current') {
+                cur.style.background = '#667eea'; cur.style.color = 'white';
+                his.style.background = 'white';   his.style.color = '#667eea';
+            } else {
+                his.style.background = '#667eea'; his.style.color = 'white';
+                cur.style.background = 'white';   cur.style.color = '#667eea';
+            }
+            await loadReportTab(tab);
+        }
+
+        async function loadReportTab(tab) {
+            const content = document.getElementById('reportContent');
+            if (content) content.innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+            try {
+                if (tab === 'current') {
+                    // Live current collection dept-wise
+                    const res = await fetch(`${API_BASE_URL}/payments/summary/department-wise`);
+                    if (!res.ok) { showMessage('Failed to load', 'error'); return; }
+                    const summary = await res.json();
+                    const entries = Object.entries(summary);
+                    const grand = entries.reduce((s, [, v]) => s + v, 0);
+
+                    content.innerHTML = `
+                        <div style="margin-bottom:12px;padding:12px 16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #059669;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-weight:600;color:#065f46;font-size:14px;">Grand Total (All Departments)</span>
+                            <span style="font-weight:700;color:#059669;font-size:18px;">₹${grand.toLocaleString()}</span>
+                        </div>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead><tr>
+                                    <th>Department</th>
+                                    <th style="text-align:right;">Total Collection</th>
+                                </tr></thead>
+                                <tbody>
+                                    ${entries.length === 0
+                                        ? '<tr><td colspan="2" style="text-align:center;color:#94a3b8;padding:20px;">No payments recorded yet</td></tr>'
+                                        : entries.map(([dept, amount]) => `
+                                            <tr>
+                                                <td>${dept}</td>
+                                                <td style="font-weight:600;color:#059669;text-align:right;">
+                                                    ₹${Number(amount).toLocaleString()}
+                                                </td>
+                                            </tr>`).join('')
+                                    }
+                                </tbody>
+                            </table>
+                        </div>`;
+
+                } else {
+                    // Archived semester-wise snapshots
+                    const res = await fetch(`${API_BASE_URL}/students/payment-summaries`);
+                    if (!res.ok) { showMessage('Failed to load history', 'error'); return; }
+                    const summaries = await res.json();
+
+                    if (summaries.length === 0) {
+                        content.innerHTML = `
+                            <div style="text-align:center;padding:40px;color:#94a3b8;">
+                                <div style="font-size:36px;margin-bottom:12px;">📊</div>
+                                <p style="font-weight:600;">No semester history yet</p>
+                                <p style="font-size:13px;margin-top:6px;">Payment snapshots are saved automatically when you promote a semester.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    const grandTotal = summaries.reduce((s, r) => s + (r.totalCollection || 0), 0);
+
+                    content.innerHTML = `
+                        <div style="margin-bottom:12px;padding:12px 16px;background:#f0fdf4;border-radius:8px;border-left:4px solid #059669;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-weight:600;color:#065f46;font-size:14px;">Total Archived Collection (All Semesters)</span>
+                            <span style="font-weight:700;color:#059669;font-size:18px;">₹${grandTotal.toLocaleString()}</span>
+                        </div>
+                        <div class="table-container">
+                            <table class="table">
+                                <thead><tr>
+                                    <th>Department</th>
+                                    <th style="text-align:center;">Semester</th>
+                                    <th style="text-align:center;">Year</th>
+                                    <th style="text-align:center;">Students</th>
+                                    <th style="text-align:center;">Paid</th>
+                                    <th style="text-align:center;">Unpaid</th>
+                                    <th style="text-align:right;">Collection</th>
+                                </tr></thead>
+                                <tbody>
+                                    ${summaries.map((r, i) => `
+                                        <tr style="background:${i % 2 === 0 ? '#f9fafb' : 'white'}">
+                                            <td style="font-weight:500;">${r.department?.deptName || '—'}</td>
+                                            <td style="text-align:center;">
+                                                <span style="background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;">
+                                                    Sem ${r.semester}
+                                                </span>
+                                            </td>
+                                            <td style="text-align:center;font-size:12px;color:#64748b;">${r.academicYear || '—'}</td>
+                                            <td style="text-align:center;">${r.totalStudents ?? '—'}</td>
+                                            <td style="text-align:center;">
+                                                <span class="badge badge-success">${r.paidStudents ?? 0}</span>
+                                            </td>
+                                            <td style="text-align:center;">
+                                                <span class="badge ${(r.unpaidStudents ?? 0) > 0 ? 'badge-warning' : 'badge-success'}">${r.unpaidStudents ?? 0}</span>
+                                            </td>
+                                            <td style="text-align:right;font-weight:600;color:#059669;">
+                                                ₹${(r.totalCollection || 0).toLocaleString()}
+                                            </td>
+                                        </tr>`).join('')}
+                                </tbody>
+                            </table>
+                        </div>`;
+                }
+            } catch (e) {
+                showMessage('Error: ' + e.message, 'error');
+            }
+        }
+
+        // Feature Functions - HOD
+        function showUpdateAttendance() {
+            openModal('Update Student Attendance', `
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Select Semester</label>
+                        <select id="attendanceSemester" onchange="fetchStudentsForAttendance()">
+                            <option value="">-- Select Semester --</option>
+                            <option value="1">Semester 1</option>
+                            <option value="2">Semester 2</option>
+                            <option value="3">Semester 3</option>
+                            <option value="4">Semester 4</option>
+                            <option value="5">Semester 5</option>
+                            <option value="6">Semester 6</option>
+                            <option value="7">Semester 7</option>
+                            <option value="8">Semester 8</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="attendanceTableContainer"></div>
+            `);
+        }
+
+        async function fetchStudentsForAttendance() {
+            const semester = document.getElementById('attendanceSemester').value;
+            if (!semester || !currentUser.deptId) return;
+
+            const container = document.getElementById('attendanceTableContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading students...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/students/dept/${currentUser.deptId}/semester/${semester}`);
+                if (!response.ok) { container.innerHTML = '<p style="color:#dc3545">Failed to load students</p>'; return; }
+
+                const students = await response.json();
+                if (students.length === 0) { container.innerHTML = '<p style="color:#999;padding:20px 0">No students found for this semester</p>'; return; }
+
+                container.innerHTML = `
+                    <div class="alert alert-info" style="display:block;margin-bottom:15px;">
+                        ≥75% = ELIGIBLE &nbsp;|&nbsp; &lt;75% = NOT ELIGIBLE
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Semester</th>
+                                    <th>Attendance %</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${students.map(s => `
+                                    <tr id="row-${s.studentId}">
+                                        <td>${esc(s.rollNo)}</td>
+                                        <td>${esc(s.name)}</td>
+                                        <td>${s.department?.deptName || 'N/A'}</td>
+                                        <td>${esc(s.currentSemester)}</td>
+                                        <td>
+                                            <input type="number" 
+                                                id="att-${s.studentId}" 
+                                                value="${s.attendancePercentage || 0}" 
+                                                min="0" max="100" step="0.1"
+                                                style="width:90px;padding:6px;border:2px solid #e0e0e0;border-radius:6px;font-size:13px;">
+                                        </td>
+                                        <td>
+                                            <span id="status-${s.studentId}" class="badge ${s.eligibilityStatus === 'ELIGIBLE' ? 'badge-success' : 'badge-danger'}">
+                                                ${esc(s.eligibilityStatus || 'N/A')}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-primary" style="padding:6px 14px;font-size:13px;" 
+                                                onclick="updateSingleAttendance(${s.studentId})">
+                                                Update
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top:15px;">
+                        <button class="btn btn-success" id="updateAllBtn">
+                            Update All
+                        </button>
+                    </div>
+                `;
+                // Wire the Update All button now that it exists in the DOM
+                const allIds = students.map(s => s.studentId);
+                document.getElementById('updateAllBtn').onclick = () => updateAllAttendance(allIds);
+            } catch (error) {
+                container.innerHTML = `<p style="color:#dc3545">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function updateSingleAttendance(studentId) {
+            const attendance = document.getElementById(`att-${studentId}`).value;
+            if (!attendance) { showMessage('Enter attendance value', 'error'); return; }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/students/${studentId}/attendance`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ attendancePercentage: parseFloat(attendance) })
+                });
+
+                if (response.ok) {
+                    const student = await response.json();
+                    const statusEl = document.getElementById(`status-${studentId}`);
+                    statusEl.textContent = student.eligibilityStatus;
+                    statusEl.className = `badge ${student.eligibilityStatus === 'ELIGIBLE' ? 'badge-success' : 'badge-danger'}`;
+                    showMessage(`Updated! ${student.name} → ${student.eligibilityStatus}`, 'success');
+                } else {
+                    showMessage('Failed to update', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function updateAllAttendance(studentIds) {
+            showMessage('Updating all students...', 'success');
+            let successCount = 0;
+
+            for (const studentId of studentIds) {
+                const attendanceEl = document.getElementById(`att-${studentId}`);
+                if (!attendanceEl) continue;
+                const attendance = attendanceEl.value;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/students/${studentId}/attendance`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ attendancePercentage: parseFloat(attendance) })
+                    });
+
+                    if (response.ok) {
+                        const student = await response.json();
+                        const statusEl = document.getElementById(`status-${studentId}`);
+                        if (statusEl) {
+                            statusEl.textContent = student.eligibilityStatus;
+                            statusEl.className = `badge ${student.eligibilityStatus === 'ELIGIBLE' ? 'badge-success' : 'badge-danger'}`;
+                        }
+                        successCount++;
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            showMessage(`${successCount} students updated successfully!`, 'success');
+        }
+
+        async function updateAttendance() {}
+
+        function showAllocateSubjects() {
+            openModal('Allocate Subjects', `
+                <div class="form-group">
+                    <label>Select Semester</label>
+                    <select id="allocateSemester" onchange="fetchSubjectsForAllocation()">
+                        <option value="">-- Select Semester --</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option>
+                        <option value="6">Semester 6</option>
+                        <option value="7">Semester 7</option>
+                        <option value="8">Semester 8</option>
+                    </select>
+                </div>
+                <div id="subjectListContainer"></div>
+            `);
+        }
+
+        async function fetchSubjectsForAllocation() {
+            const semester = document.getElementById('allocateSemester').value;
+            if (!semester || !currentUser.deptId) return;
+
+            const container = document.getElementById('subjectListContainer');
+            container.innerHTML = '<div class="loading"><div class="spinner"></div>Fetching subjects...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/subjects/dept/${currentUser.deptId}/semester/${semester}`);
+                const subjects = response.ok ? await response.json() : [];
+
+                container.innerHTML = `
+                    <div class="alert alert-warning" style="display:block;margin:15px 0;">
+                        Only ELIGIBLE students will be allocated subjects
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label style="font-weight:600;font-size:14px;color:#333;">Subjects for Semester ${semester}</label>
+                        <div style="border:2px solid #e0e0e0;border-radius:8px;padding:12px;margin-top:8px;max-height:220px;overflow-y:auto;">
+                            ${subjects.length > 0 ? subjects.map(s => `
+                                <div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #f0f0f0;">
+                                    <input type="checkbox" checked id="subj-${s.subjectId}" style="width:16px;height:16px;cursor:pointer;">
+                                    <span style="font-family:monospace;font-size:12px;background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:4px;">${esc(s.subjectCode || s.subjectId)}</span>
+                                    <span style="font-size:13px;color:#333;">${esc(s.name)}</span>
+                                    <span class="badge badge-info" style="margin-left:auto;font-size:11px;">${s.type}</span>
+                                    <span style="font-size:12px;color:#28a745;font-weight:600;">₹${s.fee}</span>
+                                </div>
+                            `).join('') : '<p style="color:#999;text-align:center;padding:10px;">No subjects found for this semester</p>'}
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:15px;">
+                        <label style="font-weight:600;font-size:14px;color:#333;">Add Extra Subject by Subject Code</label>
+                        <div style="display:flex;gap:10px;margin-top:8px;">
+                            <input type="text" id="extraSubjectCode" placeholder="e.g., CSE-CS3501" 
+                                style="flex:1;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:13px;">
+                            <button class="btn btn-secondary" style="padding:10px 16px;font-size:13px;" onclick="addExtraSubject()">Add</button>
+                        </div>
+                        <div id="extraSubjectsList" style="margin-top:8px;"></div>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="allocateSubjects(${semester})">
+                        Allocate Subjects to Eligible Students
+                    </button>
+                `;
+
+                window._extraSubjects = [];
+
+            } catch (error) {
+                container.innerHTML = `<p style="color:#dc3545">Error: ${error.message}</p>`;
+            }
+        }
+
+        async function addExtraSubject() {
+            const code = document.getElementById('extraSubjectCode').value.trim();
+            if (!code) { showMessage('Enter a subject code', 'error'); return; }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/subjects/dept/${currentUser.deptId}/semester/1`);
+                const allSubjects = await fetch(`${API_BASE_URL}/subjects/all`).then(r => r.json());
+                const found = allSubjects.find(s => s.subjectCode === code || String(s.subjectId) === code);
+
+                if (!found) { showMessage(`Subject code "${code}" not found`, 'error'); return; }
+                if (window._extraSubjects.find(s => s.subjectId === found.subjectId)) {
+                    showMessage('Subject already added', 'error'); return;
+                }
+
+                window._extraSubjects.push(found);
+                document.getElementById('extraSubjectCode').value = '';
+
+                const list = document.getElementById('extraSubjectsList');
+                list.innerHTML = window._extraSubjects.map(s => `
+                    <div style="display:flex;align-items:center;gap:10px;padding:6px 10px;background:#f0fff4;border-radius:6px;margin-top:4px;">
+                        <span style="font-family:monospace;font-size:12px;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;">${esc(s.subjectCode || s.subjectId)}</span>
+                        <span style="font-size:13px;">${esc(s.name)}</span>
+                        <span style="font-size:12px;color:#28a745;font-weight:600;margin-left:auto;">₹${s.fee}</span>
+                    </div>
+                `).join('');
+
+                showMessage(`Added: ${found.name}`, 'success');
+            } catch (e) {
+                showMessage('Error finding subject: ' + e.message, 'error');
+            }
+        }
+
+        async function allocateSubjects(semester) {
+            const deptId = currentUser.deptId;
+            if (!deptId || !semester) { showMessage('Missing dept or semester', 'error'); return; }
+
+            const extraCodes = (window._extraSubjects || []).map(s => s.subjectCode).filter(Boolean);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/exam-registration/allocate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        deptId: parseInt(deptId),
+                        semester: parseInt(semester),
+                        extraSubjectCodes: extraCodes
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showMessage(`${result.totalAllocations} subjects allocated successfully!`, 'success');
+                } else {
+                    const err = await response.json();
+                    showMessage(err.error || 'Failed to allocate subjects', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function viewDepartmentSubjects() {
+            openModal('Department Subjects', `
+                <div class="form-group">
+                    <label>Select Semester</label>
+                    <select id="subjectSemesterView" onchange="loadDepartmentSubjects()">
+                        <option value="">-- Select Semester --</option>
+                        <option value="1">Semester 1</option>
+                        <option value="2">Semester 2</option>
+                        <option value="3">Semester 3</option>
+                        <option value="4">Semester 4</option>
+                        <option value="5">Semester 5</option>
+                        <option value="6">Semester 6</option>
+                        <option value="7">Semester 7</option>
+                        <option value="8">Semester 8</option>
+                    </select>
+                </div>
+                <div id="subjectsDisplay"></div>
+            `);
+        }
+
+        async function loadDepartmentSubjects() {
+            const semester = document.getElementById('subjectSemesterView').value;
+            if (!semester || !currentUser.deptId) return;
+
+            document.getElementById('subjectsDisplay').innerHTML = '<div class="loading"><div class="spinner"></div>Loading...</div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/subjects/dept/${currentUser.deptId}/semester/${semester}`);
+                if (response.ok) {
+                    const subjects = await response.json();
+                    const tableHTML = `
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Subject Name</th>
+                                        <th>Type</th>
+                                        <th>Fee</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${subjects.map(sub => `
+                                        <tr>
+                                            <td>${sub.subjectId}</td>
+                                            <td>${sub.name}</td>
+                                            <td><span class="badge badge-info">${sub.type}</span></td>
+                                            <td style="font-weight: 600;">₹${sub.fee}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    `;
+                    document.getElementById('subjectsDisplay').innerHTML = tableHTML;
+                } else {
+                    document.getElementById('subjectsDisplay').innerHTML = '<p style="color: #999;">No subjects found</p>';
+                }
+            } catch (error) {
+                document.getElementById('subjectsDisplay').innerHTML = '<p style="color: #dc3545;">Error loading subjects</p>';
+            }
+        }
+
+        // Feature Functions - STUDENT
+
+        async function viewArrearHistory() {
+            if (!currentUser.studentId) { showMessage('Student ID not found', 'error'); return; }
+
+            openModal('Arrear History', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/exam-registration/student/${currentUser.studentId}`);
+                if (!response.ok) { showMessage('Failed to load arrear history', 'error'); return; }
+                const allRegistrations = await response.json();
+
+                // Arrear History shows only PAID arrears
+                // Unpaid arrears are visible in My Subjects until paid
+                const arrears = allRegistrations.filter(reg =>
+                    reg.type === 'ARREAR' && reg.payment
+                );
+
+                if (arrears.length === 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div style="text-align:center;padding:40px 20px;color:#64748b;">
+                            <div style="font-size:48px;margin-bottom:16px;">📋</div>
+                            <p style="font-size:15px;font-weight:600;margin-bottom:8px;">No Arrear History</p>
+                            <p style="font-size:14px;">You have no arrear subject registrations.</p>
+                        </div>`;
+                    return;
+                }
+
+                // Group by semester
+                const bySemester = {};
+                arrears.forEach(reg => {
+                    const sem = reg.subject?.semester || 'Unknown';
+                    if (!bySemester[sem]) bySemester[sem] = [];
+                    bySemester[sem].push(reg);
+                });
+
+                const paidCount   = arrears.filter(r => r.payment).length;
+                const unpaidCount = arrears.filter(r => !r.payment).length;
+                const totalFee    = arrears.reduce((s, r) => s + (r.subject?.fee || 0), 0);
+                const paidFee     = arrears.filter(r => r.payment).reduce((s, r) => s + (r.subject?.fee || 0), 0);
+
+                let html = `
+                    <!-- Summary cards -->
+                    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+                        <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:14px;text-align:center;">
+                            <div style="font-size:22px;font-weight:700;color:#0369a1;">${arrears.length}</div>
+                            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;">Total Arrears</div>
+                        </div>
+                        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;text-align:center;">
+                            <div style="font-size:22px;font-weight:700;color:#15803d;">${paidCount}</div>
+                            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;">Paid</div>
+                        </div>
+                        <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px;text-align:center;">
+                            <div style="font-size:22px;font-weight:700;color:#d97706;">${unpaidCount}</div>
+                            <div style="font-size:11px;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-top:2px;">Pending</div>
+                        </div>
+                    </div>
+                    <div style="background:#f8faff;border:1px solid #e2e8f0;border-radius:8px;padding:10px 14px;margin-bottom:20px;font-size:13px;color:#334155;">
+                        Total arrear fee: <strong>₹${totalFee.toLocaleString()}</strong>
+                        &nbsp;|&nbsp; Paid: <strong style="color:#15803d;">₹${paidFee.toLocaleString()}</strong>
+                        &nbsp;|&nbsp; Pending: <strong style="color:#d97706;">₹${(totalFee - paidFee).toLocaleString()}</strong>
+                    </div>`;
+
+                // Table per semester
+                Object.keys(bySemester).sort((a,b) => a - b).forEach(sem => {
+                    const regs = bySemester[sem];
+                    html += `
+                        <div style="margin-bottom:24px;">
+                            <div style="font-size:13px;font-weight:600;color:#1e293b;margin-bottom:8px;
+                                        padding:6px 12px;background:#e8f0fe;border-radius:6px;display:inline-block;">
+                                Semester ${esc(String(sem))}
+                            </div>
+                            <div class="table-container">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject Code</th>
+                                            <th>Subject Name</th>
+                                            <th>Type</th>
+                                            <th>Fee</th>
+                                            <th>Status</th>
+                                            <th>Receipt</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${regs.map(reg => `
+                                            <tr>
+                                                <td><span style="font-family:monospace;font-size:12px;background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:4px;">${esc(reg.subject?.subjectCode || '-')}</span></td>
+                                                <td>${esc(reg.subject?.name || 'N/A')}</td>
+                                                <td><span class="badge badge-info">${esc(reg.subject?.type || 'N/A')}</span></td>
+                                                <td style="font-weight:600;">₹${reg.subject?.fee || 0}</td>
+                                                <td>${reg.payment
+                                                    ? '<span class="badge badge-success">Paid</span>'
+                                                    : '<span class="badge badge-warning">Unpaid</span>'}</td>
+                                                <td>${reg.payment?.receiptNo
+                                                    ? `<button data-receipt="${esc(reg.payment.receiptNo)}" class="btn-download-pdf" style="padding:4px 10px;background:#2563EB;color:white;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;">⬇ PDF</button>`
+                                                    : '<span style="color:#ccc;font-size:12px;">—</span>'}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>`;
+                });
+
+                document.getElementById('modalBody').innerHTML = html;
+
+                // Wire PDF download buttons
+                document.querySelectorAll('.btn-download-pdf').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        window.open(API_BASE_URL + '/payments/receipt/download/' + encodeURIComponent(this.getAttribute('data-receipt')), '_blank');
+                    });
+                });
+
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function viewMySubjects() {
+            if (!currentUser.studentId) {
+                showMessage('Student ID not found', 'error');
+                return;
+            }
+
+            openModal('My Allocated Subjects', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+            await refreshMySubjectsModal();
+        }
+
+        async function refreshMySubjectsModal() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/exam-registration/student/${currentUser.studentId}`);
+                if (!response.ok) { showMessage('Failed to load subjects', 'error'); return; }
+                const allRegistrations = await response.json();
+
+                const isCompleted = currentUser.programmeStatus === 'COMPLETED';
+                const isEligible  = currentUser.eligibilityStatus === 'ELIGIBLE';
+
+                // Show current semester SEMESTER subjects + ALL unpaid arrears
+                // Paid arrears move to Arrear History
+                const registrations = isCompleted
+                    ? allRegistrations.filter(reg => reg.type === 'ARREAR' && !reg.payment)
+                    : allRegistrations.filter(reg =>
+                        (reg.type === 'SEMESTER' && reg.subject?.semester === currentUser.currentSemester) ||
+                        (reg.type === 'ARREAR' && !reg.payment)
+                      );
+
+                const semesterLabel = isCompleted
+                    ? 'Course completed — use Arrear History for arrear subjects'
+                    : `Showing Semester ${currentUser.currentSemester} subjects`;
+
+                if (registrations.length === 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div style="text-align:center;padding:40px 20px;color:#64748b;">
+                            <div style="font-size:48px;margin-bottom:16px;">📚</div>
+                            <p style="font-size:15px;font-weight:600;margin-bottom:8px;">
+                                ${isCompleted ? 'Course Completed' : 'No subjects allocated yet'}
+                            </p>
+                            <p style="font-size:14px;">
+                                ${isCompleted
+                                    ? 'Use "Add Arrear Subject" to register for pending arrear exams.'
+                                    : `Your HOD has not allocated subjects for Semester ${currentUser.currentSemester} yet.`}
+                            </p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="margin-bottom:10px;font-size:13px;color:#64748b;">${semesterLabel}</div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Subject Code</th>
+                                    <th>Subject</th>
+                                    <th>Type</th>
+                                    <th>Reg Type</th>
+                                    <th>Fee</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${registrations.map(reg => `
+                                    <tr id="reg-row-${reg.regId}">
+                                        <td><span style="font-family:monospace;font-size:12px;background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:4px;">${esc(reg.subject?.subjectCode || '-')}</span></td>
+                                        <td>${esc(reg.subject?.name || 'N/A')}</td>
+                                        <td><span class="badge badge-info">${esc(reg.subject?.type || 'N/A')}</span></td>
+                                        <td><span class="badge ${reg.type === 'SEMESTER' ? 'badge-success' : 'badge-warning'}">${esc(reg.type)}</span></td>
+                                        <td style="font-weight:600;">₹${reg.subject?.fee || 0}</td>
+                                        <td>${reg.payment ? '<span class="badge badge-success">Paid</span>' : '<span class="badge badge-warning">Unpaid</span>'}</td>
+                                        <td>
+                                            ${reg.type === 'ARREAR' && !reg.payment ?
+                                                `<button class="btn btn-danger" style="padding:4px 10px;font-size:12px;" onclick="removeArrear(${reg.regId})">Remove</button>` :
+                                                '<span style="color:#ccc;font-size:12px;">—</span>'
+                                            }
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+
+                window._selectedArrearSubject = null;
+
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function searchArrearSubject(query) {
+            const suggestionsEl = document.getElementById('arrearSuggestions');
+            if (!query || query.length < 2) { suggestionsEl.style.display = 'none'; return; }
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/subjects/all`);
+                const allSubjects = await res.json();
+                const filtered = allSubjects.filter(s =>
+                    (s.subjectCode && s.subjectCode.toLowerCase().includes(query.toLowerCase())) ||
+                    s.name.toLowerCase().includes(query.toLowerCase())
+                ).slice(0, 8);
+
+                if (filtered.length === 0) { suggestionsEl.style.display = 'none'; return; }
+
+                suggestionsEl.innerHTML = filtered.map((s, idx) => `
+                    <div data-subject-idx="${idx}"
+                        style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:10px;"
+                        onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='white'">
+                        <span style="font-family:monospace;font-size:11px;background:#e8f0fe;color:#1a56db;padding:2px 8px;border-radius:4px;white-space:nowrap;">${esc(s.subjectCode || s.subjectId)}</span>
+                        <span style="font-size:13px;flex:1;">${esc(s.name)}</span>
+                        <span style="font-size:12px;color:#28a745;font-weight:600;">₹${s.fee}</span>
+                    </div>
+                `).join('');
+                // Store the filtered list so click handler can look up by index
+                window._arrearSearchResults = filtered;
+                // Wire clicks via delegation — avoids any inline JS with dynamic data
+                suggestionsEl.querySelectorAll('[data-subject-idx]').forEach(el => {
+                    el.addEventListener('click', () => {
+                        const idx = parseInt(el.getAttribute('data-subject-idx'), 10);
+                        selectArrearSubject(window._arrearSearchResults[idx]);
+                    });
+                });
+                suggestionsEl.style.display = 'block';
+            } catch(e) { console.error(e); }
+        }
+
+        function selectArrearSubject(subject) {
+            window._selectedArrearSubject = subject;
+            document.getElementById('arrearCodeInput').value = subject.subjectCode || subject.subjectId;
+            document.getElementById('arrearSuggestions').style.display = 'none';
+            document.getElementById('selectedArrearSubject').innerHTML = `
+                <div style="background:#f0fff4;padding:10px 14px;border-radius:8px;display:flex;align-items:center;gap:10px;border:1px solid #d1fae5;">
+                    <span style="font-family:monospace;font-size:12px;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:4px;">${esc(subject.subjectCode || subject.subjectId)}</span>
+                    <span style="font-size:13px;font-weight:500;">${esc(subject.name)}</span>
+                    <span class="badge badge-info" style="font-size:11px;">${esc(subject.type)}</span>
+                    <span style="font-size:13px;color:#28a745;font-weight:600;margin-left:auto;">₹${subject.fee}</span>
+                </div>
+            `;
+        }
+
+        async function submitArrear() {
+            const subject = window._selectedArrearSubject;
+            if (!subject) { showMessage('Please search and select a subject first', 'error'); return; }
+            if (!subject.subjectId) { showMessage('Invalid subject selected — no ID found', 'error'); return; }
+
+            const btn = document.querySelector('#modal button.btn-primary');
+            if (btn) { btn.disabled = true; btn.textContent = 'Registering…'; }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/exam-registration/arrear`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: currentUser.studentId,
+                        subjectId: subject.subjectId
+                    })
+                });
+
+                if (response.ok) {
+                    showMessage('Arrear registered: ' + subject.name + ' (₹' + subject.fee + ')', 'success');
+                    window._selectedArrearSubject = null;
+                    const inp = document.getElementById('arrearCodeInput');
+                    const sug = document.getElementById('arrearSuggestions');
+                    const sel = document.getElementById('selectedArrearSubject');
+                    if (inp) inp.value = '';
+                    if (sug) sug.style.display = 'none';
+                    if (sel) sel.innerHTML = '<div style="background:#d1fae5;padding:12px 16px;border-radius:8px;font-size:13px;color:#065f46;font-weight:500;">✓ ' + subject.name + ' registered. Search to add another.</div>';
+                } else {
+                    const err = await response.json().catch(() => ({}));
+                    showMessage(err.error || 'Failed to register arrear subject', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'Register Arrear Subject'; }
+            }
+        }
+
+        async function removeArrear(regId) {
+            // Show inline confirm instead of browser confirm()
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;display:flex;align-items:center;justify-content:center;';
+            overlay.innerHTML = `
+                <div style="background:var(--surface);border-radius:16px;padding:32px 36px;width:100%;max-width:360px;margin:20px;box-shadow:0 24px 60px rgba(0,0,0,0.2);text-align:center;">
+                    <div style="width:48px;height:48px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                    </div>
+                    <p style="font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:var(--ink);margin-bottom:8px;">Remove arrear subject?</p>
+                    <p style="font-size:13px;color:var(--muted);font-weight:300;margin-bottom:24px;">This will delete the registration. You can re-add it later.</p>
+                    <div style="display:flex;gap:10px;">
+                        <button id="cancelRemove" style="flex:1;padding:11px;border:1px solid var(--line);background:var(--bg);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;">Cancel</button>
+                        <button id="confirmRemove" style="flex:1;padding:11px;border:none;background:#dc2626;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:white;cursor:pointer;">Remove</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+
+            await new Promise(resolve => {
+                overlay.querySelector('#cancelRemove').onclick  = () => { document.body.removeChild(overlay); resolve(false); };
+                overlay.querySelector('#confirmRemove').onclick = () => { document.body.removeChild(overlay); resolve(true); };
+            }).then(async confirmed => {
+                if (!confirmed) return;
+                try {
+                    const res = await fetch(`${API_BASE_URL}/exam-registration/${regId}?ownerStudentId=${currentUser.studentId}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        showMessage('Arrear subject removed', 'success');
+                        await refreshMySubjectsModal();
+                    } else {
+                        showMessage('Failed to remove', 'error');
+                    }
+                } catch(e) {
+                    showMessage('Error: ' + e.message, 'error');
+                }
+            });
+        }
+
+        function showAddArrear() {
+            window._selectedArrearSubject = null;
+            openModal('Add Arrear Subject', `
+                <div class="info-box" style="margin-bottom:20px;">
+                    Search by subject code or name. Only subjects from your department are shown.
+                    After selecting, click <strong>Register Arrear</strong>.
+                </div>
+                <div id="arrearMsg"></div>
+
+                <div class="form-group">
+                    <label>Search Subject</label>
+                    <div style="position:relative;">
+                        <input type="text" id="arrearCodeInput"
+                            placeholder="Type subject code or name (e.g., CSE-CS3301)"
+                            oninput="searchArrearSubject(this.value)"
+                            autocomplete="off"
+                            style="width:100%;padding:11px 14px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;background:var(--bg);outline:none;">
+                        <div id="arrearSuggestions"
+                            style="position:absolute;top:100%;left:0;right:0;background:var(--surface);
+                                   border:1px solid var(--line);border-radius:0 0 8px 8px;z-index:200;
+                                   max-height:240px;overflow-y:auto;display:none;
+                                   box-shadow:0 8px 24px rgba(0,0,0,0.1);"></div>
+                    </div>
+                </div>
+
+                <div id="selectedArrearSubject" style="margin-bottom:20px;"></div>
+
+                <div id="arrearAlreadyRegistered" style="display:none;"></div>
+
+                <button class="btn btn-primary" style="width:100%;padding:13px;"
+                    onclick="submitArrear()">Register Arrear Subject</button>
+            `);
+        }
+
+        async function addArrearSubject() {}
+
+        // Pay Arrear Fees for COMPLETED students — checks live from backend
+        async function viewFeesCompleted() {
+            if (!currentUser.studentId) return;
+            openModal('Pay Arrear Exam Fees', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+
+            try {
+                const res = await fetch(`${API_BASE_URL}/exam-registration/student/${currentUser.studentId}/unpaid`);
+                if (!res.ok) { showMessage('Failed to load pending fees', 'error'); return; }
+                const unpaid = await res.json();
+                const arrears = unpaid.filter(r => r.type === 'ARREAR');
+
+                if (arrears.length === 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div style="text-align:center;padding:40px 20px;color:#64748b;">
+                            <div style="font-size:48px;margin-bottom:16px;">✅</div>
+                            <p style="font-size:15px;font-weight:600;margin-bottom:8px;">No pending arrear fees</p>
+                            <p style="font-size:14px;">Use "Add Arrear Subject" to register for a new arrear exam first.</p>
+                        </div>`;
+                    return;
+                }
+
+                const total = arrears.reduce((sum, r) => sum + (r.subject?.fee || 0), 0);
+
+                const rows = arrears.map(r => `
+                    <tr>
+                        <td style="font-family:monospace;font-size:12px;">${esc(r.subject?.subjectCode || '—')}</td>
+                        <td>${esc(r.subject?.name || 'N/A')}</td>
+                        <td><span class="badge badge-warning">ARREAR</span></td>
+                        <td style="font-weight:600;">₹${r.subject?.fee || 0}</td>
+                    </tr>`).join('');
+
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="table-container" style="margin-bottom:20px;">
+                        <table class="table">
+                            <thead><tr>
+                                <th>Code</th><th>Subject</th><th>Type</th><th>Fee</th>
+                            </tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                    <div style="background:#f0fdf4;border-left:4px solid #059669;border-radius:8px;padding:14px 18px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+                        <span style="font-weight:600;color:#065f46;">Total Arrear Fee</span>
+                        <span style="font-weight:700;font-size:20px;color:#059669;">₹${total.toLocaleString()}</span>
+                    </div>
+                    <div class="form-group">
+                        <label style="font-weight:700;color:#1e293b;">Transaction ID <span style="color:#ef4444;">*</span> <span style="font-size:11px;color:#64748b;font-weight:400;">(Required)</span></label>
+                        <input type="text" id="transactionId" placeholder="e.g. 407932817634" maxlength="50"
+                            style="border:2px solid #e2e8f0;transition:border-color .2s;"
+                            oninput="validateTxnId(this)">
+                        <div id="txnIdHint" style="font-size:12px;margin-top:5px;color:#94a3b8;min-height:16px;">Enter the UTR / Transaction ID from GPay, PhonePe, or Paytm</div>
+                    </div>
+                    <button class="btn btn-success" style="width:100%;" onclick="processPayment()" id="payNowBtn">Pay Now ₹${total.toLocaleString()}</button>
+                `;
+            } catch(e) {
+                showMessage('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function viewFees() {
+            if (!currentUser.studentId) {
+                showMessage('Student ID not found', 'error');
+                return;
+            }
+
+            openModal('Pay Examination Fees', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/exam-registration/student/${currentUser.studentId}/total-fee`);
+                if (response.ok) {
+                    const result = await response.json();
+                    const totalFee = result.totalFee || 0;
+                    
+                    document.getElementById('modalBody').innerHTML = `
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                            <h3 style="margin-bottom: 10px;">Fee Summary</h3>
+                            <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #dee2e6;">
+                                <span>Total Examination Fee:</span>
+                                <strong style="font-size: 20px; color: #667eea;">₹${totalFee.toLocaleString()}</strong>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="font-weight:700;color:#1e293b;">Transaction ID <span style="color:#ef4444;">*</span> <span style="font-size:11px;color:#64748b;font-weight:400;">(Required — from your payment app)</span></label>
+                            <input type="text" id="transactionId" placeholder="e.g. 407932817634" maxlength="50"
+                                style="border:2px solid #e2e8f0;transition:border-color .2s;"
+                                oninput="validateTxnId(this)">
+                            <div id="txnIdHint" style="font-size:12px;margin-top:5px;color:#94a3b8;min-height:16px;">Enter the UTR / Transaction ID from GPay, PhonePe, or Paytm</div>
+                        </div>
+                        
+                        <button class="btn btn-success" onclick="processPayment()" id="payNowBtn">Pay Now</button>
+                    `;
+                } else {
+                    showMessage('Failed to calculate fees', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        function validateTxnId(input) {
+            const hint = document.getElementById('txnIdHint');
+            const val  = input.value.trim();
+            if (!val) {
+                input.style.borderColor = '#e2e8f0';
+                if (hint) hint.textContent = 'Enter the UTR / Transaction ID from GPay, PhonePe, or Paytm';
+                if (hint) hint.style.color = '#94a3b8';
+            } else if (val.length < 6) {
+                input.style.borderColor = '#ef4444';
+                if (hint) { hint.textContent = 'Transaction ID too short'; hint.style.color = '#ef4444'; }
+            } else {
+                input.style.borderColor = '#10b981';
+                if (hint) { hint.textContent = '✓ Transaction ID looks valid'; hint.style.color = '#10b981'; }
+            }
+        }
+
+        async function processPayment() {
+            const txnInput = document.getElementById('transactionId');
+            const transactionId = txnInput ? txnInput.value.trim() : '';
+
+            if (!transactionId || transactionId.length < 6) {
+                // Highlight the field
+                if (txnInput) {
+                    txnInput.style.borderColor = '#ef4444';
+                    txnInput.focus();
+                }
+                const hint = document.getElementById('txnIdHint');
+                if (hint) { hint.textContent = '⚠ Transaction ID is required before paying'; hint.style.color = '#ef4444'; }
+                showMessage('Please enter your Transaction ID / UTR number before submitting.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/payments/process`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        studentId: currentUser.studentId,
+                        transactionId
+                    })
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    showMessage(
+                        `Payment successful! Receipt No: ${result.receiptNo}`,
+                        'success'
+                    );
+                    setTimeout(() => {
+                        viewMyReceipts();
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    showMessage(error.error || 'Payment failed', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        async function viewMyReceipts() {
+            if (!currentUser.studentId) {
+                showMessage('Student ID not found', 'error');
+                return;
+            }
+
+            openModal('My Payment Receipts', '<div class="loading"><div class="spinner"></div>Loading...</div>');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/payments/student/${currentUser.studentId}`);
+                if (!response.ok) { showMessage('Failed to load receipts', 'error'); return; }
+                const payments = await response.json();
+
+                if (payments.length === 0) {
+                    document.getElementById('modalBody').innerHTML = `
+                        <div style="text-align:center;padding:40px 20px;color:#64748b;">
+                            <div style="font-size:48px;margin-bottom:16px;">🧾</div>
+                            <p style="font-size:15px;font-weight:600;margin-bottom:8px;">No receipts yet</p>
+                            <p style="font-size:14px;">Once you pay your exam fees, your receipts will appear here.</p>
+                        </div>`;
+                    return;
+                }
+
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Receipt No</th>
+                                    <th>Date</th>
+                                    <th>Amount</th>
+                                                                        <th>Status</th>
+                                    <th style="text-align:center;">Download</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${payments.map(p => `
+                                    <tr>
+                                        <td style="font-weight:600;">${esc(p.receiptNo)}</td>
+                                        <td>${new Date(p.paymentDate).toLocaleDateString()}</td>
+                                        <td style="font-weight:600;color:#28a745;">₹${(p.totalAmount || 0).toLocaleString()}</td>
+                                        <td>
+                                            <span class="badge ${p.status === 'COMPLETED' ? 'badge-success' : 'badge-warning'}">
+                                                ${esc(p.status)}
+                                            </span>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            <button
+                                                data-receipt="${esc(p.receiptNo)}"
+                                                class="btn-download-pdf"
+                                                style="padding:6px 14px;background:#2563EB;color:white;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:600;transition:background 0.2s;"
+                                                onmouseover="this.style.background='#1d4ed8'"
+                                                onmouseout="this.style.background='#2563EB'">
+                                                ⬇ PDF
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+
+                // Wire download buttons after innerHTML is set
+                document.querySelectorAll('.btn-download-pdf').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const receiptNo = this.getAttribute('data-receipt');
+                        window.open(API_BASE_URL + '/payments/receipt/download/' + encodeURIComponent(receiptNo), '_blank');
+                    });
+                });
+
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+
+        function showNotEligible() {
+            openModal('Not Eligible', `
+                <div class="alert alert-danger" style="display: block;">
+                    <strong>⚠️ Access Denied</strong><br><br>
+                    Your attendance is ${currentUser.attendancePercentage || 0}%<br>
+                    Minimum required: 75%<br><br>
+                    <strong>Please meet the Discipline Committee to resolve this issue.</strong>
+                </div>
+            `);
+        }
+
+        // Logout
+        async function viewSemesterHistory() {
+            if (!currentUser.studentId) return;
+            openModal('Academic History — All Semesters',
+                '<div class="loading"><div class="spinner"></div>Loading...</div>');
+            try {
+                const res = await fetch(
+                    `${API_BASE_URL}/students/${currentUser.studentId}/semester-history`);
+                if (!res.ok) { showMessage('Failed to load history', 'error'); return; }
+                const records = await res.json();
+
+                if (records.length === 0) {
+                    document.getElementById('modalBody').innerHTML =
+                        '<p style="color:#64748b;text-align:center;padding:30px;">No semester history found.</p>';
+                    return;
+                }
+
+                const rows = records.map(r => `
+                    <tr>
+                        <td style="font-weight:600;text-align:center;">
+                            <span style="background:#e0e7ff;color:#3730a3;padding:4px 12px;border-radius:12px;font-size:13px;">
+                                Sem ${r.semester}
+                            </span>
+                        </td>
+                        <td style="font-weight:600;color:${r.attendancePercentage >= 75 ? '#15803d' : '#dc2626'};">
+                            ${r.attendancePercentage || 0}%
+                        </td>
+                        <td>
+                            <span class="badge ${r.eligibilityStatus === 'ELIGIBLE' ? 'badge-success' : 'badge-danger'}">
+                                ${r.eligibilityStatus}
+                            </span>
+                        </td>
+                        <td style="font-size:12px;color:#64748b;">
+                            ${r.academicYear || '—'}
+                        </td>
+                        <td style="font-size:12px;color:#64748b;">
+                            ${r.promotedOn ? new Date(r.promotedOn).toLocaleDateString() : '—'}
+                        </td>
+                    </tr>`).join('');
+
+                document.getElementById('modalBody').innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;">Semester</th>
+                                    <th>Attendance</th>
+                                    <th>Eligibility</th>
+                                    <th>Academic Year</th>
+                                    <th>Completed On</th>
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`;
+            } catch(e) {
+                showMessage('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function showHallTicketManager() {
+            openModal('🎫 Generate Hall Tickets', '<div class="loading"><div class="spinner"></div>Loading students...</div>');
+
+            try {
+                // Fetch all students
+                const [studRes, deptRes] = await Promise.all([
+                    fetch(`${API_BASE_URL}/students/all`),
+                    fetch(`${API_BASE_URL}/departments/all`)
+                ]);
+                const students    = await studRes.json();
+                const departments = await deptRes.json();
+
+                if (!students.length) {
+                    document.getElementById('modalBody').innerHTML = '<div style="text-align:center;padding:40px;color:#64748b;">No students found.</div>';
+                    return;
+                }
+
+                // Build dept filter options
+                const deptOpts = '<option value="">All Departments</option>' +
+                    departments.map(d => `<option value="${d.deptId}">${esc(d.deptName)}</option>`).join('');
+
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+                        <select id="htDeptFilter" onchange="filterHallTicketStudents()"
+                            style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;min-width:180px;">
+                            ${deptOpts}
+                        </select>
+                        <input id="htSearch" type="text" placeholder="Search by name or roll no..."
+                            oninput="filterHallTicketStudents()"
+                            style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;flex:1;min-width:180px;">
+                        <button onclick="generateAllHallTickets()"
+                            style="padding:9px 18px;background:#0f2552;color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;">
+                            ⬇ Download All (ZIP)
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table" id="htStudentTable">
+                            <thead>
+                                <tr>
+                                    <th>Roll No</th>
+                                    <th>Name</th>
+                                    <th>Dept</th>
+                                    <th>Sem</th>
+                                    <th>Attendance</th>
+                                    <th>Fee Paid</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="htTableBody">
+                                ${buildHallTicketRows(students)}
+                            </tbody>
+                        </table>
+                    </div>`;
+
+                // Store students for filtering
+                window._htStudents = students;
+
+            } catch(e) {
+                showMessage('Error loading students: ' + e.message, 'error');
+            }
+        }
+
+        function buildHallTicketRows(students) {
+            if (!students.length) return '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px;">No students found</td></tr>';
+            return students.map(s => {
+                const eligible  = s.eligibilityStatus === 'ELIGIBLE';
+                const att       = s.attendancePercentage != null ? s.attendancePercentage : 0;
+                const deptName  = s.department?.deptName || '—';
+                const sem       = s.currentSemester || '—';
+                const attColor  = eligible ? '#15803d' : '#dc2626';
+                const attBg     = eligible ? '#f0fdf4' : '#fef2f2';
+
+                return `<tr>
+                    <td style="font-family:monospace;font-size:12px;">${esc(s.rollNo)}</td>
+                    <td style="font-weight:600;">${esc(s.name)}</td>
+                    <td style="font-size:12px;color:#64748b;">${esc(deptName)}</td>
+                    <td style="text-align:center;">${sem}</td>
+                    <td style="text-align:center;">
+                        <span style="background:${attBg};color:${attColor};padding:2px 8px;border-radius:12px;font-size:12px;font-weight:600;">
+                            ${att}%
+                        </span>
+                    </td>
+                    <td style="text-align:center;" id="feestatus-${s.studentId}">
+                        <span style="color:#94a3b8;font-size:12px;">—</span>
+                    </td>
+                    <td style="text-align:center;">
+                        <button onclick="generateOneHallTicket(${s.studentId}, '${esc(s.rollNo)}')"
+                            style="padding:5px 12px;background:#2f52e0;color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">
+                            ⬇ Generate
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
+        function filterHallTicketStudents() {
+            const deptId = document.getElementById('htDeptFilter')?.value || '';
+            const search = (document.getElementById('htSearch')?.value || '').toLowerCase().trim();
+            let filtered = window._htStudents || [];
+            if (deptId)  filtered = filtered.filter(s => String(s.department?.deptId) === deptId);
+            if (search)  filtered = filtered.filter(s =>
+                s.name?.toLowerCase().includes(search) || s.rollNo?.toLowerCase().includes(search));
+            const tbody = document.getElementById('htTableBody');
+            if (tbody) tbody.innerHTML = buildHallTicketRows(filtered);
+        }
+
+        async function generateOneHallTicket(studentId, rollNo) {
+            try {
+                // Check eligibility first
+                const checkRes = await fetch(`${API_BASE_URL}/hall-ticket/check/${studentId}`);
+                const check    = await checkRes.json();
+                if (!check.eligible) {
+                    showMessage('Cannot generate: ' + check.message, 'error');
+                    return;
+                }
+                // Open PDF in new tab
+                window.open(`${API_BASE_URL}/hall-ticket/download/${studentId}`, '_blank');
+            } catch(e) {
+                showMessage('Error: ' + e.message, 'error');
+            }
+        }
+
+        function generateAllHallTickets() {
+            showMessage('Bulk download coming soon. Please generate individually for now.', 'error');
+        }
+
+
+        async function showProfileSettings() {
+            openModal('Profile Settings', '<div class="loading"><div class="spinner"></div>Loading profile…</div>');
+            try {
+                const role = currentUser.role;
+                let url, idKey;
+                if      (role === 'STUDENT')         { url = `${API_BASE_URL}/profile/student/${currentUser.studentId}`;         idKey = 'studentId'; }
+                else if (role === 'HOD')              { url = `${API_BASE_URL}/profile/hod/${currentUser.hodId}`;                 idKey = 'hodId'; }
+                else if (role === 'ADMIN')            { url = `${API_BASE_URL}/profile/admin/${currentUser.adminId}`;             idKey = 'adminId'; }
+                else if (role === 'EXAM_CONTROLLER')  { url = `${API_BASE_URL}/profile/exam-controller/${currentUser.controllerId}`; idKey = 'controllerId'; }
+                else { showMessage('Unknown role', 'error'); return; }
+
+                const res  = await fetch(url);
+                const data = await res.json();
+
+                const photoUrl = data.photoUrl ? `${API_BASE_URL}${data.photoUrl}` : '';
+                const isStudent = role === 'STUDENT';
+                const isAdminOrEC = role === 'ADMIN' || role === 'EXAM_CONTROLLER';
+
+                document.getElementById('modalBody').innerHTML = `
+                <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap;">
+
+                    <!-- Photo column -->
+                    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;min-width:120px;">
+                        <div id="profileAvatarWrap" style="width:100px;height:100px;border-radius:50%;background:#e8f0fe;border:3px solid #667eea;overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                            ${photoUrl
+                                ? `<img src="${esc(photoUrl)}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML='<span style=\'font-size:36px;\'>👤</span>'">`
+                                : `<span style="font-size:36px;">👤</span>`}
+                        </div>
+                        <label style="cursor:pointer;font-size:12px;color:#667eea;font-weight:600;text-align:center;">
+                            📷 Change Photo
+                            <input type="file" id="profilePhotoFile" accept="image/jpeg,image/png,image/webp" style="display:none"
+                                onchange="previewProfilePhoto(this)">
+                        </label>
+                        <button onclick="uploadProfilePhoto(${data[idKey] || currentUser[idKey]})"
+                            style="padding:6px 14px;background:#667eea;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;width:100%;">
+                            Upload
+                        </button>
+                        <div style="font-size:11px;color:#94a3b8;text-align:center;">JPG/PNG · Max 2MB</div>
+                    </div>
+
+                    <!-- Fields column -->
+                    <div style="flex:1;min-width:260px;">
+                        <div id="profileUpdateMsg" style="display:none;padding:9px 13px;border-radius:8px;font-size:13px;font-weight:500;margin-bottom:14px;"></div>
+
+                        <div style="display:grid;gap:14px;">
+
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;color:#374151;display:block;margin-bottom:5px;">Full Name</label>
+                                <input type="text" id="pName" value="${esc(data.name||'')}"
+                                    style="width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;"
+                                    onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                            </div>
+
+                            ${isAdminOrEC ? `
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;color:#374151;display:block;margin-bottom:5px;">Designation</label>
+                                <input type="text" id="pDesignation" value="${esc(data.designation||'')}"
+                                    style="width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;"
+                                    onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                            </div>` : ''}
+
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;color:#374151;display:block;margin-bottom:5px;">Phone Number</label>
+                                <input type="tel" id="pPhone" value="${esc(data.phone||'')}" maxlength="10"
+                                    style="width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;"
+                                    onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                            </div>
+
+                            <div>
+                                <label style="font-size:11.5px;font-weight:600;color:#374151;display:block;margin-bottom:5px;">Date of Birth</label>
+                                <input type="date" id="pDob" value="${esc(data.dateOfBirth||'')}"
+                                    style="width:100%;padding:10px 13px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;outline:none;"
+                                    onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                            </div>
+
+                            <!-- Read-only fields -->
+                            <div style="background:#f8fafc;border-radius:8px;padding:12px 14px;">
+                                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="font-size:11.5px;color:#64748b;">Email</span>
+                                    <span style="font-size:12.5px;font-weight:500;">${esc(data.email||'')}</span>
+                                </div>
+                                ${data.rollNo ? `<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="font-size:11.5px;color:#64748b;">Roll No</span>
+                                    <span style="font-size:12.5px;font-family:monospace;">${esc(data.rollNo)}</span>
+                                </div>` : ''}
+                                ${data.employeeId ? `<div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                    <span style="font-size:11.5px;color:#64748b;">Employee ID</span>
+                                    <span style="font-size:12.5px;font-family:monospace;">${esc(data.employeeId)}</span>
+                                </div>` : ''}
+                                ${data.department ? `<div style="display:flex;justify-content:space-between;">
+                                    <span style="font-size:11.5px;color:#64748b;">Department</span>
+                                    <span style="font-size:12.5px;">${esc(data.department)}</span>
+                                </div>` : ''}
+                            </div>
+
+                            <button onclick="saveProfileSettings(${data[idKey] || currentUser[idKey]})"
+                                style="padding:11px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border:none;border-radius:9px;font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:opacity .15s;"
+                                onmouseover="this.style.opacity='.9'" onmouseout="this.style.opacity='1'">
+                                Save Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+
+                // Store role and id for save/upload functions
+                window._profileRole  = role;
+                window._profileId    = data[idKey] || currentUser[idKey];
+
+            } catch(e) {
+                showMessage('Failed to load profile: ' + e.message, 'error');
+            }
+        }
+
+        function previewProfilePhoto(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 2*1024*1024) { alert('File must be under 2MB'); input.value=''; return; }
+            const reader = new FileReader();
+            reader.onload = e => {
+                document.getElementById('profileAvatarWrap').innerHTML =
+                    `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:cover;">`;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function uploadProfilePhoto(id) {
+            const file = document.getElementById('profilePhotoFile')?.files[0];
+            if (!file) { alert('Please select a photo first.'); return; }
+            const role = window._profileRole;
+            let url;
+            if      (role === 'STUDENT')        url = `${API_BASE_URL}/profile/student/${id}/photo`;
+            else if (role === 'HOD')             url = `${API_BASE_URL}/profile/hod/${id}/photo`;
+            else if (role === 'ADMIN')           url = `${API_BASE_URL}/profile/admin/${id}/photo`;
+            else if (role === 'EXAM_CONTROLLER') url = `${API_BASE_URL}/profile/exam-controller/${id}/photo`;
+            const fd = new FormData(); fd.append('photo', file);
+            try {
+                const res = await fetch(url, { method:'POST', body:fd });
+                const data = await res.json();
+                if (data.success) {
+                    showProfileMsg('✓ Photo uploaded successfully!', 'success');
+                } else { showProfileMsg(data.error || 'Upload failed', 'error'); }
+            } catch(e) { showProfileMsg('Upload error: ' + e.message, 'error'); }
+        }
+
+        async function saveProfileSettings(id) {
+            const role = window._profileRole;
+            const body = {
+                name:  document.getElementById('pName')?.value.trim(),
+                phone: document.getElementById('pPhone')?.value.trim(),
+                dateOfBirth: document.getElementById('pDob')?.value,
+            };
+            const desEl = document.getElementById('pDesignation');
+            if (desEl) body.designation = desEl.value.trim();
+
+            let url;
+            if      (role === 'STUDENT')        url = `${API_BASE_URL}/profile/student/${id}`;
+            else if (role === 'HOD')             url = `${API_BASE_URL}/profile/hod/${id}`;
+            else if (role === 'ADMIN')           url = `${API_BASE_URL}/profile/admin/${id}`;
+            else if (role === 'EXAM_CONTROLLER') url = `${API_BASE_URL}/profile/exam-controller/${id}`;
+
+            try {
+                const res  = await fetch(url, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+                const data = await res.json();
+                if (data.success) {
+                    showProfileMsg('✓ Profile updated successfully!', 'success');
+                    // Update session name
+                    if (body.name) {
+                        currentUser.name = body.name;
+                        sessionStorage.setItem('user', JSON.stringify(currentUser));
+                        const nameEl = document.getElementById('sidebarUserName');
+                        if (nameEl) nameEl.textContent = body.name;
+                    }
+                } else { showProfileMsg(data.error || 'Update failed', 'error'); }
+            } catch(e) { showProfileMsg('Error: ' + e.message, 'error'); }
+        }
+
+        function showProfileMsg(msg, type) {
+            const el = document.getElementById('profileUpdateMsg');
+            if (!el) return;
+            el.textContent = msg;
+            el.style.display = 'block';
+            el.style.background = type === 'success' ? '#f0fdf4' : '#fef2f2';
+            el.style.color      = type === 'success' ? '#15803d'  : '#dc2626';
+            el.style.border     = type === 'success' ? '1px solid #bbf7d0' : '1px solid #fecaca';
+            setTimeout(() => { el.style.display = 'none'; }, 5000);
+        }
+
+        function openAdminPanel() {
+            window.open('Adminpanel.html', '_blank');
+        }
+
+        function formatDob(dob) {
+            if (!dob) return '—';
+            try {
+                const d = new Date(dob);
+                return d.toLocaleDateString('en-IN', { day:'2-digit', month:'2-digit', year:'numeric' });
+            } catch { return dob; }
+        }
+
+        function logout() {
+            document.getElementById('logoutOverlay').style.display = 'flex';
+        }
+
+        function cancelLogout() {
+            document.getElementById('logoutOverlay').style.display = 'none';
+        }
+
+        function confirmLogout() {
+            sessionStorage.clear();
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Logout confirmation overlay -->
+    <div id="logoutOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:var(--surface);border-radius:16px;padding:36px 40px;width:100%;max-width:380px;margin:20px;box-shadow:0 24px 60px rgba(0,0,0,0.2);text-align:center;">
+            <div style="width:52px;height:52px;background:#fee2e2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            </div>
+            <p style="font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;color:var(--ink);margin-bottom:8px;">Sign out?</p>
+            <p style="font-size:13px;color:var(--muted);font-weight:300;margin-bottom:28px;">You will be returned to the login page.</p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="cancelLogout()"
+                    style="flex:1;padding:12px;border:1px solid var(--line);background:var(--bg);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;">
+                    Stay
+                </button>
+                <button onclick="confirmLogout()"
+                    style="flex:1;padding:12px;border:none;background:#dc2626;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;color:white;cursor:pointer;">
+                    Sign out
+                </button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

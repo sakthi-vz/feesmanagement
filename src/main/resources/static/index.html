@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CEMS — College Exam Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --ink:    #0d0d0d;
+            --muted:  #6b6b6b;
+            --line:   #e4e4e4;
+            --bg:     #f7f5f2;
+            --white:  #ffffff;
+            --accent: #2f52e0;
+            --accent-dark: #1a38b0;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 480px;
+        }
+
+        /* ── Left panel ──────────────────────────────────── */
+        .left {
+            padding: 56px 72px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--line);
+            min-height: 100vh;
+        }
+
+        .wordmark {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .wordmark-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .headline {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px 0 60px;
+        }
+
+        .headline h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(52px, 5vw, 76px);
+            font-weight: 400;
+            line-height: 1.08;
+            letter-spacing: -0.02em;
+            color: var(--ink);
+            margin-bottom: 28px;
+        }
+
+        .headline h1 em {
+            font-style: italic;
+            color: var(--accent);
+        }
+
+        .headline p {
+            font-size: 16px;
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 460px;
+            font-weight: 300;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 48px;
+            padding-top: 64px;
+            border-top: 1px solid var(--line);
+        }
+
+        .stat-item { }
+        .stat-num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 32px;
+            color: var(--ink);
+            letter-spacing: -0.02em;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 2px;
+        }
+
+        .left-footer {
+            font-size: 12px;
+            color: var(--muted);
+            padding-top: 32px;
+        }
+
+        /* ── Right panel ─────────────────────────────────── */
+        .right {
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 52px;
+            min-height: 100vh;
+        }
+
+        .panel-label {
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 32px;
+        }
+
+        .panel-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--ink);
+            margin-bottom: 8px;
+        }
+
+        .panel-sub {
+            font-size: 14px;
+            color: var(--muted);
+            margin-bottom: 36px;
+            font-weight: 300;
+        }
+
+        /* Tab switcher */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: #f0eeeb;
+            padding: 4px;
+            border-radius: 10px;
+            margin-bottom: 32px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 9px 0;
+            border: none;
+            background: transparent;
+            border-radius: 7px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: var(--white);
+            color: var(--ink);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        /* Form */
+        .form-pane { display: none; }
+        .form-pane.active { display: block; }
+
+        .field { margin-bottom: 18px; }
+
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 8px;
+        }
+
+        .field input {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--ink);
+            background: var(--bg);
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(47,82,224,0.1);
+            background: var(--white);
+        }
+
+        .field input::placeholder { color: #b0aeaa; }
+
+        .btn-signin {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s;
+            margin-top: 4px;
+        }
+
+        .btn-signin:hover:not(:disabled) {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-signin:disabled { opacity: 0.55; cursor: not-allowed; }
+
+        /* Message */
+        .msg {
+            display: none;
+            padding: 12px 14px;
+            border-radius: 7px;
+            font-size: 13px;
+            margin-bottom: 18px;
+        }
+        .msg.show { display: block; }
+        .msg.error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .msg.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+        /* Register strip */
+        .register-strip {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--line);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .register-strip span {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .register-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .reg-link {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 6px 12px;
+            border: 1px solid #d0d9f8;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .reg-link:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Decorative accent line on left */
+        .accent-bar {
+            width: 48px;
+            height: 3px;
+            background: var(--accent);
+            border-radius: 2px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 900px) {
+            body { grid-template-columns: 1fr; }
+            .left { display: none; }
+            .right { padding: 48px 32px; min-height: 100vh; }
+        }
+
+        /* ── Forgot password modal ───────────────────────── */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.35);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-box {
+            background: var(--white);
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            margin: 20px;
+        }
+        .modal-title {
+            font-family: "DM Serif Display", serif;
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 6px;
+        }
+        .modal-sub {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 28px;
+            font-weight: 300;
+        }
+        .modal-step { display: none; }
+        .modal-step.active { display: block; }
+        .otp-row {
+            display: flex;
+            gap: 8px;
+        }
+        .otp-row input {
+            flex: 1;
+            text-align: center;
+            letter-spacing: 0.2em;
+            font-size: 22px;
+            padding: 12px 8px;
+        }
+        .modal-msg {
+            padding: 10px 14px;
+            border-radius: 7px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .modal-msg.show { display: block; }
+        .modal-msg.error { background:#fef2f2;color:#b91c1c;border:1px solid #fecaca; }
+        .modal-msg.success { background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0; }
+        .modal-actions { display:flex; gap:10px; margin-top:20px; }
+        .btn-ghost {
+            flex:1; padding:12px; border:1px solid var(--line); background:transparent;
+            border-radius:8px; font-family:"DM Sans",sans-serif; font-size:14px;
+            color:var(--muted); cursor:pointer; transition:background 0.2s;
+        }
+        .btn-ghost:hover { background:var(--bg); }
+        .resend-row { text-align:center; margin-top:14px; font-size:12px; color:var(--muted); }
+        .resend-row a { color:var(--accent); cursor:pointer; text-decoration:none; }
+
+    </style>
+</head>
+<body>
+
+    <!-- Left branding panel -->
+    <div class="left">
+        <div class="wordmark">
+            <div class="wordmark-dot"></div>
+            College Exam Management System
+        </div>
+
+        <div class="headline">
+            <div class="accent-bar"></div>
+            <h1>Exam fees,<br>managed <em>simply.</em></h1>
+            <p>A unified platform for students, heads of departments, and administrators to manage exam registrations, fee payments, and academic records.</p>
+
+            <div class="stats-row">
+                <div class="stat-item">
+                    <div class="stat-num">8</div>
+                    <div class="stat-label">Semesters tracked</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num">3</div>
+                    <div class="stat-label">User roles</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-num">PDF</div>
+                    <div class="stat-label">Instant receipts</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="left-footer">
+            &copy; 2024 CEMS — All rights reserved
+        </div>
+    </div>
+
+    <!-- Right login panel -->
+    <div class="right">
+        <p class="panel-label">Secure access</p>
+        <h2 class="panel-title">Sign in</h2>
+        <p class="panel-sub">Select your role and enter your credentials</p>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('student', this)">Student</button>
+            <button class="tab" onclick="switchTab('staff', this)">HOD</button>
+            <button class="tab" onclick="switchTab('admin', this)">Admin</button>
+        </div>
+
+        <div class="msg" id="message"></div>
+
+        <!-- Student form -->
+        <form class="form-pane active" id="studentForm">
+            <div class="field">
+                <label>Roll Number</label>
+                <input type="text" id="studentRollNo" placeholder="e.g. 311822104042" required>
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="studentPassword" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn-signin" id="studentLoginBtn">Sign in</button>
+        <div style="text-align:right;margin-top:10px;">
+            <a href="#" onclick="openForgot();return false;" style="font-size:12px;color:var(--accent);text-decoration:none;">Forgot password?</a>
+        </div>
+        </form>
+
+        <!-- HOD form -->
+        <form class="form-pane" id="staffForm">
+            <div class="field">
+                <label>Username</label>
+                <input type="text" id="staffUsername" placeholder="Enter username" required>
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="staffPassword" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn-signin" id="staffLoginBtn">Sign in</button>
+        <div style="text-align:right;margin-top:10px;">
+            <a href="#" onclick="openForgot();return false;" style="font-size:12px;color:var(--accent);text-decoration:none;">Forgot password?</a>
+        </div>
+        </form>
+
+        <!-- Admin form -->
+        <form class="form-pane" id="adminForm">
+            <div class="field">
+                <label>Username</label>
+                <input type="text" id="adminUsername" placeholder="Enter admin username" required>
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="adminPassword" placeholder="Enter password" required>
+            </div>
+            <button type="submit" class="btn-signin" id="adminLoginBtn">Sign in</button>
+        <div style="text-align:right;margin-top:10px;">
+            <a href="#" onclick="openForgot();return false;" style="font-size:12px;color:var(--accent);text-decoration:none;">Forgot password?</a>
+        </div>
+        </form>
+
+        <div class="register-strip" id="registerStrip">
+            <span>New here?</span>
+            <div class="register-links">
+                <a href="StudentRegister.html" class="reg-link">Register</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Forgot password modal ─────────────────────────────── -->
+    <div class="modal-overlay" id="forgotOverlay">
+        <div class="modal-box">
+
+            <!-- Step 1: Enter email -->
+            <div class="modal-step active" id="step1">
+                <p class="modal-title">Forgot password</p>
+                <p class="modal-sub">Enter your registered email address and we'll send you a one-time password.</p>
+                <div class="modal-msg" id="modal-msg-1"></div>
+                <div class="field">
+                    <label>Email address</label>
+                    <input type="email" id="forgotEmail" placeholder="you@example.com" style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-ghost" onclick="closeForgot()">Cancel</button>
+                    <button class="btn-signin" id="sendOtpBtn" onclick="sendOtp(false)" style="flex:1;padding:12px;">Send OTP</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Enter OTP -->
+            <div class="modal-step" id="step2">
+                <p class="modal-title">Enter OTP</p>
+                <p class="modal-sub" id="step2Sub">OTP sent to your registered email. Valid for 10 minutes.</p>
+                <div class="modal-msg" id="modal-msg-2"></div>
+                <div class="field">
+                    <label>6-digit OTP</label>
+                    <input type="text" id="otpInput" placeholder="000000" maxlength="6"
+                        style="width:100%;padding:14px;border:1px solid var(--line);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:22px;text-align:center;letter-spacing:0.3em;background:var(--bg);outline:none;">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-ghost" onclick="goStep(1)">Back</button>
+                    <button class="btn-signin" id="verifyOtpBtn" onclick="verifyOtp()" style="flex:1;padding:12px;">Verify OTP</button>
+                </div>
+                <div class="resend-row">Didn't receive it? <a onclick="sendOtp(true)">Resend OTP</a></div>
+            </div>
+
+            <!-- Step 3: New password -->
+            <div class="modal-step" id="step3">
+                <p class="modal-title">Reset password</p>
+                <p class="modal-sub">Choose a new password for your account.</p>
+                <div class="modal-msg" id="modal-msg-3"></div>
+                <div class="field" style="margin-bottom:14px;">
+                    <label>New password</label>
+                    <input type="password" id="newPassword" placeholder="Min. 8 characters"
+                        style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;">
+                </div>
+                <div class="field">
+                    <label>Confirm password</label>
+                    <input type="password" id="confirmPassword" placeholder="Re-enter password"
+                        style="width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;background:var(--bg);outline:none;">
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-ghost" onclick="closeForgot()">Cancel</button>
+                    <button class="btn-signin" id="resetBtn" onclick="resetPassword()" style="flex:1;padding:12px;">Reset Password</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const API = 'http://localhost:8080';
+
+        // ── Tab switcher (global — called from onclick) ───────────
+        function switchTab(type, btn) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.form-pane').forEach(f => f.classList.remove('active'));
+            document.getElementById(type + 'Form').classList.add('active');
+            hideMsg();
+            // Only show register strip on student tab
+            const strip = document.getElementById('registerStrip');
+            if (strip) strip.style.display = type === 'student' ? '' : 'none';
+        }
+
+        function showMsg(text, type) {
+            const el = document.getElementById('message');
+            el.textContent = text;
+            el.className = 'msg show ' + type;
+        }
+
+        function hideMsg() {
+            const el = document.getElementById('message');
+            if (el) el.className = 'msg';
+        }
+
+        async function doLogin(url, body, btnId, btnText, roleCheck) {
+            const btn = document.getElementById(btnId);
+            btn.disabled = true; btn.textContent = 'Signing in…';
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                const allowedRoles = roleCheck === 'ADMIN_OR_EC'
+                    ? ['ADMIN','EXAM_CONTROLLER'] : (roleCheck ? [roleCheck] : null);
+                const roleOk = !allowedRoles || allowedRoles.includes(data.role);
+                if (res.ok && roleOk) {
+                    showMsg('Welcome back!', 'success');
+                    sessionStorage.setItem('user', JSON.stringify(data));
+                    const dest = data.role === 'EXAM_CONTROLLER' ? 'ExamControllerPanel.html' : 'dashboard.html';
+                    setTimeout(() => window.location.href = dest, 800);
+                } else if (res.ok && !roleOk) {
+                    showMsg('Access denied — wrong account type.', 'error');
+                } else {
+                    showMsg(data.error || 'Invalid credentials', 'error');
+                }
+            } catch {
+                showMsg('Cannot connect to server', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = btnText;
+            }
+        }
+
+        // ── Forgot Password (all global — called from onclick) ────
+        let _forgotEmail = '';
+
+        function openForgot() {
+            document.getElementById('forgotOverlay').classList.add('open');
+            goStep(1);
+        }
+
+        function closeForgot() {
+            document.getElementById('forgotOverlay').classList.remove('open');
+            _forgotEmail = '';
+            var fe = document.getElementById('forgotEmail');
+            var oi = document.getElementById('otpInput');
+            var np = document.getElementById('newPassword');
+            var cp = document.getElementById('confirmPassword');
+            if (fe) fe.value = '';
+            if (oi) oi.value = '';
+            if (np) np.value = '';
+            if (cp) cp.value = '';
+        }
+
+        function goStep(n) {
+            document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
+            document.getElementById('step' + n).classList.add('active');
+        }
+
+        function modalMsg(step, text, type) {
+            const el = document.getElementById('modal-msg-' + step);
+            if (!el) return;
+            el.textContent = text;
+            el.className = 'modal-msg show ' + type;
+        }
+
+        function clearModalMsg(step) {
+            const el = document.getElementById('modal-msg-' + step);
+            if (el) el.className = 'modal-msg';
+        }
+
+        async function sendOtp(isResend) {
+            const email = isResend ? _forgotEmail : document.getElementById('forgotEmail').value.trim();
+            if (!email || !email.includes('@')) {
+                modalMsg(1, 'Please enter a valid email address', 'error'); return;
+            }
+            _forgotEmail = email;
+
+            const btn = document.getElementById('sendOtpBtn');
+            btn.disabled = true; btn.textContent = 'Sending…';
+            clearModalMsg(1);
+
+            try {
+                const res = await fetch(API + '/auth/otp/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('step2Sub').textContent =
+                        'OTP sent to ' + data.maskedEmail + '. Valid for 10 minutes.';
+                    if (isResend) {
+                        modalMsg(2, 'New OTP sent!', 'success');
+                    } else {
+                        goStep(2);
+                    }
+                } else {
+                    modalMsg(1, data.error || 'Failed to send OTP', 'error');
+                }
+            } catch {
+                modalMsg(1, 'Cannot connect to server', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Send OTP';
+            }
+        }
+
+        async function verifyOtp() {
+            const otp = document.getElementById('otpInput').value.trim();
+            if (otp.length !== 6) { modalMsg(2, 'Enter the 6-digit OTP', 'error'); return; }
+
+            const btn = document.getElementById('verifyOtpBtn');
+            btn.disabled = true; btn.textContent = 'Verifying…';
+            clearModalMsg(2);
+
+            try {
+                const res = await fetch(API + '/auth/otp/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: _forgotEmail, otp })
+                });
+                const data = await res.json();
+                if (res.ok && data.valid) {
+                    goStep(3);
+                } else {
+                    modalMsg(2, data.error || 'Invalid or expired OTP', 'error');
+                }
+            } catch {
+                modalMsg(2, 'Cannot connect to server', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Verify OTP';
+            }
+        }
+
+        async function resetPassword() {
+            const np = document.getElementById('newPassword').value;
+            const cp = document.getElementById('confirmPassword').value;
+            if (np.length < 8) { modalMsg(3, 'Password must be at least 8 characters', 'error'); return; }
+            if (np !== cp)      { modalMsg(3, 'Passwords do not match', 'error'); return; }
+
+            const otp = document.getElementById('otpInput').value.trim();
+            const btn = document.getElementById('resetBtn');
+            btn.disabled = true; btn.textContent = 'Resetting…';
+            clearModalMsg(3);
+
+            try {
+                const res = await fetch(API + '/auth/otp/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: _forgotEmail, otp, newPassword: np })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    modalMsg(3, 'Password reset successfully! You can now sign in.', 'success');
+                    setTimeout(() => closeForgot(), 2500);
+                } else {
+                    modalMsg(3, data.error || 'Reset failed', 'error');
+                }
+            } catch {
+                modalMsg(3, 'Cannot connect to server', 'error');
+            } finally {
+                btn.disabled = false; btn.textContent = 'Reset Password';
+            }
+        }
+
+        // ── DOM-dependent bindings (safe inside DOMContentLoaded) ─
+        document.addEventListener('DOMContentLoaded', function() {
+            // Form submit listeners
+            document.getElementById('studentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                doLogin(API + '/auth/login/student',
+                    { rollNo: document.getElementById('studentRollNo').value.trim(),
+                      password: document.getElementById('studentPassword').value },
+                    'studentLoginBtn', 'Sign in', null);
+            });
+
+            document.getElementById('staffForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                doLogin(API + '/auth/login',
+                    { loginId: document.getElementById('staffUsername').value.trim(),
+                      password: document.getElementById('staffPassword').value },
+                    'staffLoginBtn', 'Sign in', null);
+            });
+
+            document.getElementById('adminForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                doLogin(API + '/auth/login',
+                    { loginId: document.getElementById('adminUsername').value.trim(),
+                      password: document.getElementById('adminPassword').value },
+                    'adminLoginBtn', 'Sign in', 'ADMIN_OR_EC');
+            });
+
+            // Close modal on backdrop click
+            var overlay = document.getElementById('forgotOverlay');
+            if (overlay) {
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === this) closeForgot();
+                });
+            }
+
+            // Clear session on login page load (handles back-button sign out)
+            // If user pressed back from dashboard, session was already cleared by popstate handler
+            // This ensures login page is always a clean state
+            sessionStorage.clear();
+
+            // Replace history so forward button can't go back to dashboard
+            history.replaceState(null, '', window.location.href);
+        });
+    </script>
+</body>
+</html>

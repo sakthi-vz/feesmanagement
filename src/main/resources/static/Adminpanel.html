@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEMS — Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f2f7;
+  --white:#ffffff;
+  --sidebar:#0f172a;
+  --sidebar-hover:#1e293b;
+  --sidebar-active:#3b82f6;
+  --accent:#3b82f6;
+  --accent-dark:#1d4ed8;
+  --accent-light:#eff6ff;
+  --success:#16a34a;
+  --success-bg:#f0fdf4;
+  --danger:#dc2626;
+  --danger-bg:#fef2f2;
+  --warn:#d97706;
+  --warn-bg:#fffbeb;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+  --input-bg:#f8fafc;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 6px rgba(0,0,0,.07),0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg:0 10px 15px rgba(0,0,0,.07),0 4px 6px rgba(0,0,0,.05);
+  --radius:12px;
+  --radius-sm:8px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────── */
+.sidebar{
+  width:260px;min-height:100vh;background:var(--sidebar);
+  display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;
+  transition:transform .25s ease;
+}
+.sidebar-logo{
+  padding:24px 20px 20px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.sidebar-logo-top{display:flex;align-items:center;gap:10px;}
+.logo-circle{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--accent);display:flex;align-items:center;
+  justify-content:center;font-size:18px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.logo-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:.02em;}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;padding-left:46px;}
+
+.sidebar-section{
+  font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:rgba(255,255,255,.3);padding:20px 20px 6px;
+}
+.nav-item{
+  display:flex;align-items:center;gap:11px;padding:10px 16px;margin:2px 8px;
+  border-radius:var(--radius-sm);cursor:pointer;transition:all .15s;
+  color:rgba(255,255,255,.6);font-size:13.5px;font-weight:500;
+  border:none;background:none;width:calc(100% - 16px);text-align:left;
+}
+.nav-item:hover{background:var(--sidebar-hover);color:#fff;}
+.nav-item.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.4);}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.8;}
+.nav-item.active svg,.nav-item:hover svg{opacity:1;}
+
+.sidebar-footer{
+  margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,.07);
+}
+.user-chip{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:rgba(255,255,255,.06);border-radius:var(--radius-sm);margin-bottom:10px;
+}
+.user-avatar{
+  width:32px;height:32px;border-radius:50%;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.user-info{flex:1;overflow:hidden;}
+.user-name{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:11px;color:rgba(255,255,255,.4);}
+.btn-signout{
+  width:100%;padding:9px;border-radius:var(--radius-sm);
+  background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.2);
+  font-size:12.5px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:7px;
+}
+.btn-signout:hover{background:rgba(239,68,68,.25);color:#fff;}
+
+/* ── MAIN ────────────────────────────────────────────────────── */
+.main{margin-left:260px;flex:1;min-height:100vh;display:flex;flex-direction:column;}
+.topbar{
+  background:var(--white);border-bottom:1px solid var(--border);
+  padding:0 32px;height:60px;display:flex;align-items:center;
+  justify-content:space-between;position:sticky;top:0;z-index:50;
+  box-shadow:var(--shadow);
+}
+.topbar-left h2{font-size:16px;font-weight:600;color:var(--text);}
+.topbar-left p{font-size:12px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.badge-admin{
+  padding:4px 10px;background:var(--accent-light);color:var(--accent);
+  border-radius:20px;font-size:11.5px;font-weight:600;
+}
+
+.content{padding:28px 32px;flex:1;}
+
+/* ── PANEL ───────────────────────────────────────────────────── */
+.panel{display:none;}
+.panel.active{display:block;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── PAGE HEADER ─────────────────────────────────────────────── */
+.page-header{margin-bottom:24px;}
+.page-header h1{font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.page-header p{font-size:13px;color:var(--muted);}
+
+/* ── CARD ────────────────────────────────────────────────────── */
+.card{
+  background:var(--white);border-radius:var(--radius);
+  border:1px solid var(--border);box-shadow:var(--shadow);
+  overflow:hidden;margin-bottom:20px;
+}
+.card-header{
+  padding:18px 24px 16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.card-header-left{display:flex;align-items:center;gap:10px;}
+.card-icon{
+  width:36px;height:36px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.card-icon.blue{background:#dbeafe;}
+.card-icon.green{background:#dcfce7;}
+.card-icon.purple{background:#f3e8ff;}
+.card-icon.orange{background:#ffedd5;}
+.card-icon.pink{background:#fce7f3;}
+.card-title{font-size:14.5px;font-weight:600;color:var(--text);}
+.card-subtitle{font-size:12px;color:var(--muted);margin-top:1px;}
+.card-body{padding:24px;}
+
+/* ── FORM ────────────────────────────────────────────────────── */
+.form-section{
+  font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin:20px 0 14px;padding-bottom:8px;
+  border-bottom:1px solid var(--border);
+}
+.form-section:first-child{margin-top:0;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.form-grid.cols3{grid-template-columns:1fr 1fr 1fr;}
+.form-full{grid-column:1/-1;}
+.field{display:flex;flex-direction:column;gap:6px;}
+.field label{font-size:12px;font-weight:600;color:var(--text);}
+.field label .req{color:var(--danger);margin-left:2px;}
+.field label .opt{color:var(--muted);font-weight:400;margin-left:4px;}
+.field input,.field select,.field textarea{
+  padding:10px 13px;border:1.5px solid var(--border);border-radius:var(--radius-sm);
+  font-family:'Inter',sans-serif;font-size:13.5px;color:var(--text);background:var(--input-bg);
+  outline:none;transition:border-color .15s,box-shadow .15s,background .15s;
+  appearance:none;-webkit-appearance:none;
+}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:36px;cursor:pointer;
+}
+.field input:focus,.field select:focus{
+  border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,.1);background:var(--white);
+}
+.field input::placeholder{color:#cbd5e1;}
+.field-hint{font-size:11.5px;color:var(--muted);margin-top:2px;}
+.field-hint.ok{color:var(--success);}
+.field-hint.bad{color:var(--danger);}
+
+/* Password strength */
+.pw-bar{display:flex;gap:3px;margin-top:5px;}
+.pw-bar span{flex:1;height:3px;border-radius:2px;background:var(--border);transition:background .3s;}
+.pw-bar.s1 span:nth-child(1){background:var(--danger);}
+.pw-bar.s2 span:nth-child(-n+2){background:var(--warn);}
+.pw-bar.s3 span{background:var(--success);}
+
+/* Photo upload */
+.photo-zone{
+  border:2px dashed var(--border);border-radius:var(--radius-sm);
+  padding:20px;text-align:center;cursor:pointer;
+  transition:border-color .15s,background .15s;background:var(--input-bg);
+  position:relative;
+}
+.photo-zone:hover{border-color:var(--accent);background:var(--accent-light);}
+.photo-zone input[type=file]{display:none;}
+.photo-zone-preview{
+  width:80px;height:96px;border-radius:var(--radius-sm);object-fit:cover;
+  border:2px solid var(--accent);display:none;margin:0 auto 8px;
+}
+.photo-zone-preview.show{display:block;}
+.photo-zone-icon{font-size:28px;margin-bottom:6px;}
+.photo-zone-text{font-size:12.5px;color:var(--muted);font-weight:500;}
+.photo-zone-hint{font-size:11px;color:#94a3b8;margin-top:3px;}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:7px;padding:10px 20px;
+  border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13.5px;
+  font-weight:600;cursor:pointer;transition:all .15s;border:none;
+}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--accent-dark);transform:translateY(-1px);box-shadow:0 4px 12px rgba(59,130,246,.35);}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.btn-sm{padding:7px 14px;font-size:12.5px;}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.btn-ghost:hover{background:var(--bg);color:var(--text);}
+.btn-danger{background:var(--danger-bg);color:var(--danger);border:1.5px solid #fecaca;}
+.btn-danger:hover{background:#fee2e2;}
+
+.spinner{
+  width:15px;height:15px;border:2px solid rgba(255,255,255,.3);
+  border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:none;
+}
+.btn-primary.loading .spinner{display:block;}
+.btn-primary.loading .btn-label{opacity:.7;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Alert */
+.alert{
+  padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;
+  font-weight:500;margin-bottom:18px;display:none;
+  display:flex;align-items:center;gap:10px;
+}
+.alert.show{display:flex;}
+.alert.success{background:var(--success-bg);color:#15803d;border:1px solid #bbf7d0;}
+.alert.error{background:var(--danger-bg);color:var(--danger);border:1px solid #fecaca;}
+.alert svg{flex-shrink:0;width:16px;height:16px;}
+
+/* Stats row */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{
+  background:var(--white);border-radius:var(--radius);border:1px solid var(--border);
+  padding:20px;box-shadow:var(--shadow);display:flex;align-items:center;gap:14px;
+}
+.stat-icon-wrap{
+  width:44px;height:44px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.stat-num{font-size:26px;font-weight:700;color:var(--text);letter-spacing:-.02em;}
+.stat-label{font-size:12px;color:var(--muted);margin-top:1px;}
+
+/* Table */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead th{
+  background:#f8fafc;font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--muted);padding:10px 14px;
+  border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;
+}
+tbody td{padding:12px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#f8fafc;}
+.pill{
+  display:inline-block;padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:600;letter-spacing:.03em;
+}
+.pill-blue{background:#dbeafe;color:#1d4ed8;}
+.pill-green{background:#dcfce7;color:#15803d;}
+.pill-red{background:#fee2e2;color:var(--danger);}
+.pill-orange{background:#ffedd5;color:#c2410c;}
+.pill-gray{background:#f1f5f9;color:var(--muted);}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted);}
+.empty-state .empty-icon{font-size:42px;margin-bottom:12px;}
+.empty-state p{font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.empty-state small{font-size:12px;}
+
+/* Confirm modal */
+.overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+  z-index:9999;align-items:center;justify-content:center;
+}
+.overlay.open{display:flex;}
+.modal{
+  background:var(--white);border-radius:16px;padding:32px 36px;
+  max-width:420px;width:100%;margin:20px;box-shadow:var(--shadow-lg);
+}
+.modal h3{font-size:18px;font-weight:700;margin-bottom:6px;}
+.modal p{font-size:13.5px;color:var(--muted);margin-bottom:22px;line-height:1.6;}
+.modal-actions{display:flex;gap:10px;}
+.modal-actions .btn{flex:1;justify-content:center;}
+
+/* Breadcrumb-style tab indicator */
+.form-steps{display:flex;gap:6px;margin-bottom:24px;flex-wrap:wrap;}
+.form-step{
+  display:flex;align-items:center;gap:6px;padding:6px 14px;
+  border-radius:20px;font-size:12.5px;font-weight:500;color:var(--muted);
+  background:var(--white);border:1.5px solid var(--border);cursor:pointer;transition:all .15s;
+}
+.form-step.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.form-step:hover:not(.active){border-color:var(--accent);color:var(--accent);}
+.step-num{
+  width:18px;height:18px;border-radius:50%;background:rgba(255,255,255,.25);
+  font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;
+}
+.form-step:not(.active) .step-num{background:var(--border);}
+
+@media(max-width:900px){
+  .sidebar{transform:translateX(-260px);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .form-grid,.form-grid.cols3{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr;}
+  .content{padding:20px 16px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ── SIDEBAR ─────────────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-top">
+      <div class="logo-circle">C</div>
+      <div>
+        <div class="logo-name">CEMS Admin</div>
+      </div>
+    </div>
+    <div class="logo-sub">Mohamed Sathak A.J. College</div>
+  </div>
+
+  <div class="sidebar-section">People</div>
+  <button class="nav-item active" onclick="showPanel('student',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Register Student
+  </button>
+  <button class="nav-item" onclick="showPanel('hod',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Register HOD
+  </button>
+  <button class="nav-item" onclick="showPanel('admin',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Register Admin
+  </button>
+  <button class="nav-item" onclick="showPanel('examcontroller',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+    Register Exam Controller
+  </button>
+
+  <div class="sidebar-section">Academics</div>
+  <button class="nav-item" onclick="showPanel('department',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Create Department
+  </button>
+  <button class="nav-item" onclick="showPanel('subject',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    Create Subject
+  </button>
+
+  <div class="sidebar-footer">
+    <div class="user-chip">
+      <div class="user-avatar" id="sidebarAvatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="sidebarName">Administrator</div>
+        <div class="user-role">ADMIN</div>
+      </div>
+    </div>
+    <button class="btn-signout" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign out
+    </button>
+  </div>
+</aside>
+
+<!-- ── MAIN ─────────────────────────────────────────────────────── -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <h2 id="topbarTitle">Register Student</h2>
+      <p id="topbarSub">Create a new student account</p>
+    </div>
+    <div class="topbar-right">
+      <span class="badge-admin">Administrator</span>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ══ STUDENT PANEL ══════════════════════════════════════════ -->
+    <div class="panel active" id="studentPanel">
+      <div class="page-header">
+        <h1>Register New Student</h1>
+        <p>Creates a login account and student profile in the system</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:#dbeafe;">👨‍🎓</div>
+          <div><div class="stat-num" id="totalStudents">—</div><div class="stat-label">Total Students</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:#dcfce7;">🏢</div>
+          <div><div class="stat-num" id="totalDepts">—</div><div class="stat-label">Departments</div></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon-wrap" style="background:#f3e8ff;">📚</div>
+          <div><div class="stat-num" id="totalSubjects">—</div><div class="stat-label">Subjects</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-icon blue">👨‍🎓</div>
+            <div>
+              <div class="card-title">Student Information</div>
+              <div class="card-subtitle">All fields marked * are required</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert" id="studentAlert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="studentAlertText"></span>
+          </div>
+
+          <form id="studentForm" novalidate>
+            <div class="form-section">Personal Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Roll Number <span class="req">*</span></label>
+                <input type="text" name="rollNo" id="sRollNo" placeholder="e.g. CSE2024001" autocomplete="off" required>
+                <span class="field-hint">Used as login username · Uppercase only</span>
+              </div>
+              <div class="field">
+                <label>Full Name <span class="req">*</span></label>
+                <input type="text" name="name" placeholder="As on official records" required>
+              </div>
+              <div class="field">
+                <label>Email Address <span class="req">*</span></label>
+                <input type="email" name="email" placeholder="student@college.edu" required>
+              </div>
+              <div class="field">
+                <label>Phone Number <span class="req">*</span></label>
+                <input type="tel" name="phone" placeholder="10-digit mobile" maxlength="10" pattern="[0-9]{10}" required>
+              </div>
+              <div class="field">
+                <label>Date of Birth <span class="req">*</span></label>
+                <input type="date" name="dateOfBirth" max="2010-12-31" required>
+                <span class="field-hint">As per official records</span>
+              </div>
+              <div class="field">
+                <label>Profile Photo <span class="opt">(optional)</span></label>
+                <div class="photo-zone" onclick="document.getElementById('studentPhoto').click()">
+                  <img id="studentPhotoPreview" class="photo-zone-preview" src="" alt="">
+                  <div id="studentPhotoPlaceholder">
+                    <div class="photo-zone-icon">📷</div>
+                    <div class="photo-zone-text">Click to upload</div>
+                    <div class="photo-zone-hint">JPG / PNG / WEBP · Max 2 MB</div>
+                  </div>
+                  <input type="file" id="studentPhoto" accept="image/jpeg,image/png,image/webp">
+                </div>
+                <span class="field-hint" id="studentPhotoHint">Passport-size photo recommended</span>
+              </div>
+            </div>
+
+            <div class="form-section">Academic Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Department <span class="req">*</span></label>
+                <select name="deptId" id="studentDept" required>
+                  <option value="">Select department</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Semester</label>
+                <select name="semester">
+                  <option value="1">Semester 1 (default)</option>
+                  <option value="2">Semester 2</option>
+                  <option value="3">Semester 3</option>
+                  <option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option>
+                  <option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option>
+                  <option value="8">Semester 8</option>
+                </select>
+                <span class="field-hint">New students start at Semester 1</span>
+              </div>
+            </div>
+
+            <div class="form-section">Security</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Password <span class="req">*</span></label>
+                <input type="password" name="password" id="sPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-bar" id="sPwBar"><span></span><span></span><span></span></div>
+                <span class="field-hint" id="sPwHint">At least 8 characters</span>
+              </div>
+              <div class="field">
+                <label>Confirm Password <span class="req">*</span></label>
+                <input type="password" name="confirmPassword" id="sCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <span class="field-hint" id="sCpwHint"></span>
+              </div>
+            </div>
+
+            <div style="margin-top:8px;">
+              <button type="submit" class="btn btn-primary" id="studentSubmitBtn">
+                <div class="spinner"></div>
+                <span class="btn-label">Register Student</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ HOD PANEL ═════════════════════════════════════════════ -->
+    <div class="panel" id="hodPanel">
+      <div class="page-header">
+        <h1>Register New HOD</h1>
+        <p>Creates a login account and HOD profile for a department head</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-icon green">👔</div>
+            <div>
+              <div class="card-title">HOD Information</div>
+              <div class="card-subtitle">Admin credentials required to register a HOD</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert" id="hodAlert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="hodAlertText"></span>
+          </div>
+
+          <form id="hodForm" novalidate>
+            <div class="form-section">Admin Authorisation</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Admin Username <span class="req">*</span></label>
+                <input type="text" id="hodAdminUser" placeholder="Your admin username" autocomplete="off" required>
+              </div>
+              <div class="field">
+                <label>Admin Password <span class="req">*</span></label>
+                <input type="password" id="hodAdminPass" placeholder="Your admin password" required>
+              </div>
+            </div>
+
+            <div class="form-section">Professional Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Employee ID <span class="req">*</span></label>
+                <input type="text" name="employeeId" id="hodEmpId" placeholder="e.g. HOD001" required>
+              </div>
+              <div class="field">
+                <label>Department <span class="req">*</span></label>
+                <select name="deptId" id="hodDept" required>
+                  <option value="">Select department</option>
+                </select>
+              </div>
+              <div class="field form-full">
+                <label>Full Name <span class="req">*</span></label>
+                <input type="text" name="name" placeholder="As on official records" required>
+              </div>
+            </div>
+
+            <div class="form-section">Account Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Username <span class="req">*</span></label>
+                <input type="text" name="username" id="hodUsername" placeholder="Login username" required>
+                <span class="field-hint">Lowercase, no spaces</span>
+              </div>
+              <div class="field">
+                <label>Email Address <span class="req">*</span></label>
+                <input type="email" name="email" placeholder="hod@college.edu" required>
+              </div>
+              <div class="field">
+                <label>Phone Number <span class="req">*</span></label>
+                <input type="tel" name="phone" placeholder="10-digit mobile" maxlength="10" pattern="[0-9]{10}" required>
+              </div>
+              <div class="field">
+                <label>Date of Birth <span class="req">*</span></label>
+                <input type="date" name="dateOfBirth" max="2005-12-31" required>
+              </div>
+              <div class="field">
+                <label>Profile Photo <span class="opt">(optional)</span></label>
+                <div class="photo-zone" onclick="document.getElementById('hodPhoto').click()">
+                  <img id="hodPhotoPreview" class="photo-zone-preview" src="" alt="">
+                  <div id="hodPhotoPlaceholder">
+                    <div class="photo-zone-icon">📷</div>
+                    <div class="photo-zone-text">Click to upload</div>
+                    <div class="photo-zone-hint">JPG / PNG / WEBP · Max 2 MB</div>
+                  </div>
+                  <input type="file" id="hodPhoto" accept="image/jpeg,image/png,image/webp">
+                </div>
+                <span class="field-hint" id="hodPhotoHint">Passport-size photo</span>
+              </div>
+            </div>
+
+            <div class="form-section">Security</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Password <span class="req">*</span></label>
+                <input type="password" name="password" id="hPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-bar" id="hPwBar"><span></span><span></span><span></span></div>
+                <span class="field-hint" id="hPwHint">At least 8 characters</span>
+              </div>
+              <div class="field">
+                <label>Confirm Password <span class="req">*</span></label>
+                <input type="password" name="confirmPassword" id="hCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <span class="field-hint" id="hCpwHint"></span>
+              </div>
+            </div>
+
+            <div style="margin-top:8px;">
+              <button type="submit" class="btn btn-primary" id="hodSubmitBtn">
+                <div class="spinner"></div>
+                <span class="btn-label">Register HOD</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ ADMIN PANEL ════════════════════════════════════════════ -->
+    <div class="panel" id="adminPanel">
+      <div class="page-header">
+        <h1>Register New Admin</h1>
+        <p>Creates an administrator account with full system access</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-icon purple">🔑</div>
+            <div>
+              <div class="card-title">Admin Information</div>
+              <div class="card-subtitle">Admin accounts have complete system control</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert" id="adminAlert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="adminAlertText"></span>
+          </div>
+
+          <form id="adminForm" novalidate>
+            <div class="form-section">Professional Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Employee ID <span class="req">*</span></label>
+                <input type="text" name="employeeId" id="admEmpId" placeholder="e.g. ADM001" required>
+              </div>
+              <div class="field">
+                <label>Designation <span class="req">*</span></label>
+                <input type="text" name="designation" placeholder="e.g. Principal, Dean" required>
+              </div>
+              <div class="field form-full">
+                <label>Full Name <span class="req">*</span></label>
+                <input type="text" name="name" placeholder="As on official records" required>
+              </div>
+            </div>
+
+            <div class="form-section">Account Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Username <span class="req">*</span></label>
+                <input type="text" name="username" id="admUsername" placeholder="Login username" required>
+              </div>
+              <div class="field">
+                <label>Email Address <span class="req">*</span></label>
+                <input type="email" name="email" placeholder="admin@college.edu" required>
+              </div>
+              <div class="field">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" placeholder="10-digit mobile" maxlength="10">
+              </div>
+              <div class="field">
+                <label>Date of Birth <span class="req">*</span></label>
+                <input type="date" name="dateOfBirth" max="2005-12-31" required>
+              </div>
+              <div class="field">
+                <label>Profile Photo <span class="opt">(optional)</span></label>
+                <div class="photo-zone" onclick="document.getElementById('adminPhoto').click()">
+                  <img id="adminPhotoPreview" class="photo-zone-preview" src="" alt="">
+                  <div id="adminPhotoPlaceholder">
+                    <div class="photo-zone-icon">📷</div>
+                    <div class="photo-zone-text">Click to upload</div>
+                    <div class="photo-zone-hint">JPG / PNG / WEBP · Max 2 MB</div>
+                  </div>
+                  <input type="file" id="adminPhoto" accept="image/jpeg,image/png,image/webp">
+                </div>
+                <span class="field-hint" id="adminPhotoHint">Passport-size photo</span>
+              </div>
+            </div>
+
+            <div class="form-section">Security</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Password <span class="req">*</span></label>
+                <input type="password" name="password" id="aPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-bar" id="aPwBar"><span></span><span></span><span></span></div>
+                <span class="field-hint" id="aPwHint">At least 8 characters</span>
+              </div>
+              <div class="field">
+                <label>Confirm Password <span class="req">*</span></label>
+                <input type="password" name="confirmPassword" id="aCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <span class="field-hint" id="aCpwHint"></span>
+              </div>
+            </div>
+
+            <div style="margin-top:8px;">
+              <button type="submit" class="btn btn-primary" id="adminSubmitBtn">
+                <div class="spinner"></div>
+                <span class="btn-label">Register Admin</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ DEPARTMENT PANEL ═══════════════════════════════════════ -->
+    <div class="panel" id="departmentPanel">
+      <div class="page-header">
+        <h1>Create Department</h1>
+        <p>Add a new academic department to the system</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start;">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon orange">🏢</div>
+              <div>
+                <div class="card-title">New Department</div>
+                <div class="card-subtitle">Name must be unique</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="alert" id="departmentAlert">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <span id="departmentAlertText"></span>
+            </div>
+            <form id="departmentForm" novalidate>
+              <div class="field" style="margin-bottom:16px;">
+                <label>Department Name <span class="req">*</span></label>
+                <input type="text" name="deptName" placeholder="e.g. Computer Science and Engineering" required>
+              </div>
+              <button type="submit" class="btn btn-primary" id="deptSubmitBtn">
+                <div class="spinner"></div>
+                <span class="btn-label">Create Department</span>
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-header-left">
+              <div class="card-icon orange">📋</div>
+              <div>
+                <div class="card-title">Existing Departments</div>
+                <div class="card-subtitle" id="deptCountLabel">Loading…</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="deptListWrap">
+              <div class="empty-state"><div class="empty-icon">🏢</div><p>Loading…</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SUBJECT PANEL ══════════════════════════════════════════ -->
+    <div class="panel" id="subjectPanel">
+      <div class="page-header">
+        <h1>Create Subject</h1>
+        <p>Add exam subjects to a department and semester</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-icon pink">📚</div>
+            <div>
+              <div class="card-title">Subject Details</div>
+              <div class="card-subtitle">Fee is auto-set based on subject type</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert" id="subjectAlert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="subjectAlertText"></span>
+          </div>
+          <form id="subjectForm" novalidate>
+            <div class="form-grid cols3">
+              <div class="field form-full" style="grid-column:1/3;">
+                <label>Subject Name <span class="req">*</span></label>
+                <input type="text" name="name" placeholder="e.g. Data Structures and Algorithms" required>
+              </div>
+              <div class="field">
+                <label>Subject Code <span class="req">*</span></label>
+                <input type="text" name="subjectCode" placeholder="e.g. CSE-CS3301" required>
+              </div>
+              <div class="field">
+                <label>Department <span class="req">*</span></label>
+                <select name="deptId" id="subjectDept" required>
+                  <option value="">Select department</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Semester <span class="req">*</span></label>
+                <select name="semester" required>
+                  <option value="">Select semester</option>
+                  <option value="1">Semester 1</option><option value="2">Semester 2</option>
+                  <option value="3">Semester 3</option><option value="4">Semester 4</option>
+                  <option value="5">Semester 5</option><option value="6">Semester 6</option>
+                  <option value="7">Semester 7</option><option value="8">Semester 8</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Subject Type <span class="req">*</span></label>
+                <select name="type" id="subjectType" required onchange="updateSubjectFee()">
+                  <option value="">Select type</option>
+                  <option value="THEORY">Theory — ₹400</option>
+                  <option value="PRACTICAL">Practical — ₹400</option>
+                  <option value="INTEGRATED">Integrated — ₹800</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Fee (₹) <span class="opt">(auto-filled)</span></label>
+                <input type="number" name="fee" id="subjectFee" placeholder="Auto-filled by type" step="0.01">
+                <span class="field-hint">Override only if different from default</span>
+              </div>
+              <div class="field">
+                <label>Exam Date <span class="opt">(optional)</span></label>
+                <input type="date" name="examDate" id="subjectExamDate">
+                <span class="field-hint">Used on hall ticket</span>
+              </div>
+              <div class="field">
+                <label>Session <span class="opt">(optional)</span></label>
+                <select name="session" id="subjectSession">
+                  <option value="">Select session</option>
+                  <option value="FN">FN — Forenoon</option>
+                  <option value="AN">AN — Afternoon</option>
+                </select>
+                <span class="field-hint">Used on hall ticket</span>
+              </div>
+            </div>
+
+            <div style="margin-top:20px;">
+              <button type="submit" class="btn btn-primary" id="subjectSubmitBtn">
+                <div class="spinner"></div>
+                <span class="btn-label">Create Subject</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+      <!-- ══ EXAM CONTROLLER PANEL ════════════════════════════════ -->
+    <div class="panel" id="examcontrollerPanel">
+      <div class="page-header">
+        <h1>Register Exam Controller</h1>
+        <p>Creates an Exam Controller account — can set exam schedules and generate hall tickets</p>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-icon" style="background:#f3e8ff;">📋</div>
+            <div>
+              <div class="card-title">Exam Controller Details</div>
+              <div class="card-subtitle">Their signature will appear on hall ticket PDFs</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert" id="examcontrollerAlert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="examcontrollerAlertText"></span>
+          </div>
+          <form id="examcontrollerForm" novalidate>
+            <div class="form-section">Professional Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Employee ID <span class="req">*</span></label>
+                <input type="text" name="employeeId" id="ecEmpId" placeholder="e.g. EC001" required>
+              </div>
+              <div class="field">
+                <label>Designation</label>
+                <input type="text" name="designation" placeholder="Controller of Examinations" value="Controller of Examinations">
+              </div>
+              <div class="field form-full">
+                <label>Full Name <span class="req">*</span></label>
+                <input type="text" name="name" placeholder="As on official records" required>
+              </div>
+            </div>
+            <div class="form-section">Account Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Username <span class="req">*</span></label>
+                <input type="text" name="username" id="ecUsername" placeholder="Login username" required>
+              </div>
+              <div class="field">
+                <label>Email Address <span class="req">*</span></label>
+                <input type="email" name="email" placeholder="ec@college.edu" required>
+              </div>
+              <div class="field">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" placeholder="10-digit mobile" maxlength="10">
+              </div>
+              <div class="field">
+                <label>Date of Birth <span class="req">*</span></label>
+                <input type="date" name="dateOfBirth" max="2000-12-31" required>
+              </div>
+              <div class="field">
+                <label>Profile Photo <span class="opt">(optional)</span></label>
+                <div class="photo-zone" onclick="document.getElementById('ecPhoto').click()">
+                  <img id="ecPhotoPreview" class="photo-zone-preview" src="" alt="">
+                  <div id="ecPhotoPlaceholder">
+                    <div class="photo-zone-icon">📷</div>
+                    <div class="photo-zone-text">Click to upload</div>
+                    <div class="photo-zone-hint">JPG / PNG / WEBP · Max 2 MB</div>
+                  </div>
+                  <input type="file" id="ecPhoto" accept="image/jpeg,image/png,image/webp">
+                </div>
+                <span class="field-hint" id="ecPhotoHint">Optional — passport-size photo</span>
+              </div>
+            </div>
+            <div class="form-section">Security</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Password <span class="req">*</span></label>
+                <input type="password" name="password" id="ecPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-bar" id="ecPwBar"><span></span><span></span><span></span></div>
+                <span class="field-hint" id="ecPwHint">At least 8 characters</span>
+              </div>
+              <div class="field">
+                <label>Confirm Password <span class="req">*</span></label>
+                <input type="password" name="confirmPassword" id="ecCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <span class="field-hint" id="ecCpwHint"></span>
+              </div>
+            </div>
+            <div style="margin-top:8px;">
+              <button type="submit" class="btn btn-primary" id="ecSubmitBtn">
+                <div class="spinner"></div>
+                <span class="btn-label">Register Exam Controller</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+</div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Confirm modal -->
+<div class="overlay" id="confirmModal">
+  <div class="modal">
+    <h3 id="modalTitle">Confirm Registration</h3>
+    <p id="modalBody">Please verify before submitting.</p>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" id="modalConfirmBtn">
+        <div class="spinner"></div>
+        <span class="btn-label">Confirm</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE_URL = 'http://localhost:8080';
+let currentUser = {};
+let pendingAction = null;
+
+// ── Init ──────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+    try { currentUser = JSON.parse(sessionStorage.getItem('user') || '{}'); } catch { currentUser = {}; }
+    if (!currentUser.role || currentUser.role !== 'ADMIN') {
+        alert('Access denied. Admin privileges required.');
+        window.location.href = 'index.html'; return;
+    }
+    const name = currentUser.name || currentUser.username || 'Admin';
+    document.getElementById('sidebarName').textContent = name;
+    document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
+    await loadDepartments();
+    loadStats();
+});
+
+// ── Navigation ─────────────────────────────────────────────────
+const PANEL_META = {
+    student:    { title: 'Register Student',    sub: 'Create a new student account' },
+    hod:        { title: 'Register HOD',        sub: 'Create a new Head of Department account' },
+    admin:      { title: 'Register Admin',      sub: 'Create a new administrator account' },
+    department: { title: 'Create Department',   sub: 'Add a new academic department', extra: loadDeptList },
+    subject:        { title: 'Create Subject',          sub: 'Add a new exam subject' },
+    examcontroller: { title: 'Register Exam Controller', sub: 'Create an Exam Controller account' },
+};
+function showPanel(id, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(id + 'Panel').classList.add('active');
+    if (btn) btn.classList.add('active');
+    const meta = PANEL_META[id];
+    if (meta) {
+        document.getElementById('topbarTitle').textContent = meta.title;
+        document.getElementById('topbarSub').textContent   = meta.sub;
+        if (meta.extra) meta.extra();
+    }
+}
+
+// ── Stats ──────────────────────────────────────────────────────
+async function loadStats() {
+    try {
+        const [stuRes, deptRes, subRes] = await Promise.all([
+            fetch(`${API_BASE_URL}/students/all`).catch(() => null),
+            fetch(`${API_BASE_URL}/departments/all`),
+            fetch(`${API_BASE_URL}/subjects/all`).catch(() => null),
+        ]);
+        if (stuRes?.ok)  { const d = await stuRes.json();  document.getElementById('totalStudents').textContent = d.length; }
+        if (deptRes?.ok) { const d = await deptRes.json(); document.getElementById('totalDepts').textContent    = d.length; }
+        if (subRes?.ok)  { const d = await subRes.json();  document.getElementById('totalSubjects').textContent = d.length; }
+    } catch {}
+}
+
+// ── Departments ────────────────────────────────────────────────
+async function loadDepartments() {
+    try {
+        const res   = await fetch(`${API_BASE_URL}/departments/all`);
+        const depts = await res.json();
+        const opts  = '<option value="">Select department</option>' +
+            depts.map(d => `<option value="${d.deptId}">${esc(d.deptName)}</option>`).join('');
+        ['studentDept','hodDept','subjectDept'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = opts;
+        });
+        return depts;
+    } catch { return []; }
+}
+
+async function loadDeptList() {
+    const wrap = document.getElementById('deptListWrap');
+    try {
+        const depts = await loadDepartments();
+        document.getElementById('deptCountLabel').textContent = depts.length + ' departments';
+        if (!depts.length) {
+            wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><p>No departments yet</p><small>Create the first one using the form</small></div>';
+            return;
+        }
+        wrap.innerHTML = `<table>
+            <thead><tr><th>#</th><th>Department Name</th><th>Status</th></tr></thead>
+            <tbody>${depts.map((d,i) => `<tr>
+                <td style="color:var(--muted);font-size:12px;">${i+1}</td>
+                <td style="font-weight:500;">${esc(d.deptName)}</td>
+                <td><span class="pill pill-green">Active</span></td>
+            </tr>`).join('')}</tbody>
+        </table>`;
+    } catch {
+        wrap.innerHTML = '<div class="empty-state"><p>Failed to load</p></div>';
+    }
+}
+
+// ── Password helpers ───────────────────────────────────────────
+function bindPw(pwId, barId, hintId, cpwId, cpwHintId) {
+    document.getElementById(pwId)?.addEventListener('input', function() {
+        const v = this.value, bar = document.getElementById(barId), hint = document.getElementById(hintId);
+        bar.className = 'pw-bar';
+        if (!v)          { hint.textContent='At least 8 characters'; hint.className='field-hint'; }
+        else if(v.length<8)  { bar.classList.add('s1'); hint.textContent='Too short'; hint.className='field-hint bad'; }
+        else if(v.length<12) { bar.classList.add('s2'); hint.textContent='Good'; hint.className='field-hint'; }
+        else                 { bar.classList.add('s3'); hint.textContent='Strong ✓'; hint.className='field-hint ok'; }
+        const cv = document.getElementById(cpwId)?.value;
+        if (cv) checkMatch(cv, v, cpwId, cpwHintId);
+    });
+    document.getElementById(cpwId)?.addEventListener('input', function() {
+        checkMatch(this.value, document.getElementById(pwId)?.value || '', cpwId, cpwHintId);
+    });
+}
+function checkMatch(cv, pv, inputId, hintId) {
+    const h = document.getElementById(hintId), i = document.getElementById(inputId);
+    if (!cv)         { h.textContent=''; h.className='field-hint'; i?.classList.remove('valid','invalid'); }
+    else if (cv===pv){ h.textContent='✓ Passwords match'; h.className='field-hint ok';  i?.classList.add('valid'); i?.classList.remove('invalid'); }
+    else             { h.textContent='✗ Do not match';    h.className='field-hint bad'; i?.classList.add('invalid'); i?.classList.remove('valid'); }
+}
+
+// ── Photo preview ──────────────────────────────────────────────
+function bindPhoto(inputId, previewId, placeholderId, hintId) {
+    document.getElementById(inputId)?.addEventListener('change', function() {
+        const file = this.files[0]; if (!file) return;
+        if (!['image/jpeg','image/jpg','image/png','image/webp'].includes(file.type)) {
+            setHint(hintId, '✗ Only JPG/PNG/WEBP allowed', 'bad'); this.value=''; return;
+        }
+        if (file.size > 2*1024*1024) {
+            setHint(hintId, '✗ File must be under 2 MB', 'bad'); this.value=''; return;
+        }
+        const r = new FileReader();
+        r.onload = e => {
+            const prev = document.getElementById(previewId);
+            prev.src = e.target.result; prev.classList.add('show');
+            document.getElementById(placeholderId).style.display='none';
+            setHint(hintId, '✓ ' + file.name, 'ok');
+        };
+        r.readAsDataURL(file);
+    });
+}
+function setHint(id, text, cls) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'field-hint' + (cls ? ' ' + cls : '');
+}
+
+// ── Alert helpers ──────────────────────────────────────────────
+function showAlert(panelId, msg, type) {
+    const al = document.getElementById(panelId+'Alert');
+    const tx = document.getElementById(panelId+'AlertText');
+    if (!al || !tx) return;
+    tx.textContent = msg;
+    al.className = 'alert show ' + type;
+    setTimeout(() => al.classList.remove('show'), 7000);
+}
+
+// ── Button loading ─────────────────────────────────────────────
+function setLoading(btnId, on, label) {
+    const btn = document.getElementById(btnId);
+    if (!btn) return;
+    btn.disabled = on; btn.classList.toggle('loading', on);
+    if (!on && label) btn.querySelector('.btn-label').textContent = label;
+}
+
+// ── Confirm modal ──────────────────────────────────────────────
+function openModal(title, body, onConfirm) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').textContent  = body;
+    document.getElementById('confirmModal').classList.add('open');
+    pendingAction = onConfirm;
+}
+function closeModal() {
+    document.getElementById('confirmModal').classList.remove('open');
+    setLoading('modalConfirmBtn', false, 'Confirm');
+    pendingAction = null;
+}
+document.getElementById('confirmModal').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal();
+});
+document.getElementById('modalConfirmBtn').addEventListener('click', async () => {
+    if (!pendingAction) return;
+    setLoading('modalConfirmBtn', true);
+    try { await pendingAction(); }
+    finally { closeModal(); }
+});
+
+// ── Input normalisation ────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+    bindPw('sPw','sPwBar','sPwHint','sCpw','sCpwHint');
+    bindPw('hPw','hPwBar','hPwHint','hCpw','hCpwHint');
+    bindPw('aPw','aPwBar','aPwHint','aCpw','aCpwHint');
+    bindPhoto('studentPhoto','studentPhotoPreview','studentPhotoPlaceholder','studentPhotoHint');
+    bindPhoto('hodPhoto','hodPhotoPreview','hodPhotoPlaceholder','hodPhotoHint');
+    bindPhoto('adminPhoto','adminPhotoPreview','adminPhotoPlaceholder','adminPhotoHint');
+
+    document.getElementById('sRollNo')?.addEventListener('input', function(){ this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+    document.getElementById('hodEmpId')?.addEventListener('input', function(){ this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+    document.getElementById('admEmpId')?.addEventListener('input', function(){ this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+    document.getElementById('hodUsername')?.addEventListener('input', function(){ this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,''); });
+    document.getElementById('admUsername')?.addEventListener('input', function(){ this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,''); });
+    // Exam Controller bindings
+    bindPw('ecPw','ecPwBar','ecPwHint','ecCpw','ecCpwHint');
+    bindPhoto('ecPhoto','ecPhotoPreview','ecPhotoPlaceholder','ecPhotoHint');
+    document.getElementById('ecEmpId')?.addEventListener('input', function(){ this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
+    document.getElementById('ecUsername')?.addEventListener('input', function(){ this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,''); });
+});
+
+// ── STUDENT FORM ───────────────────────────────────────────────
+document.getElementById('studentForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = getForm('studentForm');
+    if (d.password !== d.confirmPassword) { showAlert('student','Passwords do not match.','error'); return; }
+    if (d.password.length < 8)            { showAlert('student','Password must be at least 8 characters.','error'); return; }
+    delete d.confirmPassword;
+
+    openModal('Register Student: ' + d.name, 'Department will be assigned. Semester starts at 1.', async () => {
+        setLoading('studentSubmitBtn', true);
+        try {
+            const res  = await fetch(`${API_BASE_URL}/auth/register/student`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
+            const data = await res.json();
+            if (res.status === 201) {
+                const ph = document.getElementById('studentPhoto')?.files[0];
+                if (ph && data.studentId) {
+                    const fd = new FormData(); fd.append('photo', ph);
+                    await fetch(`${API_BASE_URL}/photos/upload/student/${data.studentId}`, { method:'POST', body:fd }).catch(()=>{});
+                }
+                showAlert('student', '✓ Student registered successfully! Roll No: ' + d.rollNo, 'success');
+                e.target.reset();
+                document.getElementById('sPwBar').className='pw-bar';
+                document.getElementById('studentPhotoPreview').classList.remove('show');
+                document.getElementById('studentPhotoPlaceholder').style.display='';
+                loadStats();
+            } else { showAlert('student', data.error || 'Registration failed.', 'error'); }
+        } catch { showAlert('student','Server error. Please try again.','error'); }
+        finally  { setLoading('studentSubmitBtn', false, 'Register Student'); }
+    });
+});
+
+// ── HOD FORM ──────────────────────────────────────────────────
+document.getElementById('hodForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const adminUser = document.getElementById('hodAdminUser').value.trim();
+    const adminPass = document.getElementById('hodAdminPass').value;
+    if (!adminUser || !adminPass) { showAlert('hod','Admin credentials are required.','error'); return; }
+
+    const d = getForm('hodForm');
+    if (d.password !== d.confirmPassword) { showAlert('hod','Passwords do not match.','error'); return; }
+    if (d.password.length < 8)            { showAlert('hod','Password must be at least 8 characters.','error'); return; }
+    delete d.confirmPassword;
+
+    openModal('Register HOD: ' + d.name, 'Username: ' + d.username, async () => {
+        setLoading('hodSubmitBtn', true);
+        try {
+            const res  = await fetch(`${API_BASE_URL}/auth/register/hod`, {
+                method:'POST',
+                headers:{'Content-Type':'application/json','X-Admin-Username':adminUser,'X-Admin-Password':adminPass},
+                body:JSON.stringify(d)
+            });
+            const data = await res.json();
+            if (res.status === 201) {
+                const ph = document.getElementById('hodPhoto')?.files[0];
+                if (ph && data.hodId) {
+                    const fd = new FormData(); fd.append('photo', ph);
+                    await fetch(`${API_BASE_URL}/photos/upload/hod/${data.hodId}`, { method:'POST', body:fd }).catch(()=>{});
+                }
+                showAlert('hod','✓ HOD registered successfully!','success');
+                e.target.reset();
+                document.getElementById('hPwBar').className='pw-bar';
+                document.getElementById('hodPhotoPreview').classList.remove('show');
+                document.getElementById('hodPhotoPlaceholder').style.display='';
+            } else { showAlert('hod', data.error || 'Registration failed.', 'error'); }
+        } catch { showAlert('hod','Server error.','error'); }
+        finally  { setLoading('hodSubmitBtn', false, 'Register HOD'); }
+    });
+});
+
+// ── ADMIN FORM ────────────────────────────────────────────────
+document.getElementById('adminForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = getForm('adminForm');
+    if (d.password !== d.confirmPassword) { showAlert('admin','Passwords do not match.','error'); return; }
+    if (d.password.length < 8)            { showAlert('admin','Password must be at least 8 characters.','error'); return; }
+    delete d.confirmPassword;
+
+    openModal('Register Admin: ' + d.name, 'Username: ' + d.username + ' · ' + d.designation, async () => {
+        setLoading('adminSubmitBtn', true);
+        try {
+            const res  = await fetch(`${API_BASE_URL}/auth/register/admin`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
+            const data = await res.json();
+            if (res.status === 201) {
+                const ph = document.getElementById('adminPhoto')?.files[0];
+                if (ph && data.adminId) {
+                    const fd = new FormData(); fd.append('photo', ph);
+                    await fetch(`${API_BASE_URL}/photos/upload/admin/${data.adminId}`, { method:'POST', body:fd }).catch(()=>{});
+                }
+                showAlert('admin','✓ Admin registered successfully!','success');
+                e.target.reset();
+                document.getElementById('aPwBar').className='pw-bar';
+                document.getElementById('adminPhotoPreview').classList.remove('show');
+                document.getElementById('adminPhotoPlaceholder').style.display='';
+            } else { showAlert('admin', data.error || 'Registration failed.', 'error'); }
+        } catch { showAlert('admin','Server error.','error'); }
+        finally  { setLoading('adminSubmitBtn', false, 'Register Admin'); }
+    });
+});
+
+// ── DEPARTMENT FORM ───────────────────────────────────────────
+document.getElementById('departmentForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = getForm('departmentForm');
+    setLoading('deptSubmitBtn', true);
+    try {
+        const res  = await fetch(`${API_BASE_URL}/departments/create`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
+        const data = await res.json();
+        if (res.ok) {
+            showAlert('department','✓ Department "' + d.deptName + '" created!','success');
+            e.target.reset();
+            await loadDepartments();
+            loadDeptList();
+        } else { showAlert('department', data.error || 'Creation failed.', 'error'); }
+    } catch { showAlert('department','Server error.','error'); }
+    finally  { setLoading('deptSubmitBtn', false, 'Create Department'); }
+});
+
+// ── SUBJECT FORM ──────────────────────────────────────────────
+document.getElementById('subjectForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = getForm('subjectForm');
+    const payload = {
+        name: d.name, subjectCode: d.subjectCode,
+        department: { deptId: parseInt(d.deptId) },
+        semester: parseInt(d.semester), type: d.type,
+        ...(d.fee      ? { fee:      parseFloat(d.fee) } : {}),
+        ...(d.examDate ? { examDate: d.examDate }         : {}),
+        ...(d.session  ? { session:  d.session }          : {}),
+    };
+    setLoading('subjectSubmitBtn', true);
+    try {
+        const res  = await fetch(`${API_BASE_URL}/subjects/create`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+        const data = await res.json();
+        if (res.ok) {
+            showAlert('subject','✓ Subject "' + d.name + '" created!','success');
+            e.target.reset();
+            document.getElementById('subjectFee').value='';
+        } else { showAlert('subject', data.error || 'Creation failed.', 'error'); }
+    } catch { showAlert('subject','Server error.','error'); }
+    finally  { setLoading('subjectSubmitBtn', false, 'Create Subject'); }
+});
+
+// ── Helpers ───────────────────────────────────────────────────
+function getForm(id) { return Object.fromEntries(new FormData(document.getElementById(id))); }
+function updateSubjectFee() {
+    const fees = { THEORY:400, PRACTICAL:400, INTEGRATED:800 };
+    document.getElementById('subjectFee').value = fees[document.getElementById('subjectType').value] || '';
+}
+function esc(v) {
+    return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+// ── EXAM CONTROLLER FORM ──────────────────────────────────────
+document.getElementById('examcontrollerForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = getForm('examcontrollerForm');
+    if (d.password !== d.confirmPassword) { showAlert('examcontroller','Passwords do not match.','error'); return; }
+    if (d.password.length < 8)            { showAlert('examcontroller','Password must be at least 8 characters.','error'); return; }
+    delete d.confirmPassword;
+
+    openModal('Register Exam Controller: ' + d.name, 'Username: ' + d.username + ' · ' + (d.designation||'Controller of Examinations'), async () => {
+        setLoading('ecSubmitBtn', true);
+        try {
+            const res  = await fetch(`${API_BASE_URL}/exam-controller/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
+            const data = await res.json();
+            if (res.status === 201) {
+                const ph = document.getElementById('ecPhoto')?.files[0];
+                if (ph && data.controllerId) {
+                    const fd = new FormData(); fd.append('photo', ph);
+                    await fetch(`${API_BASE_URL}/exam-controller/${data.controllerId}/upload-photo`, { method:'POST', body:fd }).catch(()=>{});
+                }
+                showAlert('examcontroller','✓ Exam Controller registered! They can now log in and access ExamControllerPanel.html','success');
+                e.target.reset();
+                document.getElementById('ecPwBar').className='pw-bar';
+                document.getElementById('ecPhotoPreview').classList.remove('show');
+                document.getElementById('ecPhotoPlaceholder').style.display='';
+            } else { showAlert('examcontroller', data.error || 'Registration failed.', 'error'); }
+        } catch { showAlert('examcontroller','Server error.','error'); }
+        finally  { setLoading('ecSubmitBtn', false, 'Register Exam Controller'); }
+    });
+});
+
+function logout() { sessionStorage.clear(); window.location.href='index.html'; }
+</script>
+</body>
+</html>

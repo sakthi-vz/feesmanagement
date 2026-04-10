@@ -1,0 +1,1572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEMS — Exam Controller Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#f0f2f7;--white:#fff;--sidebar:#0f172a;--accent:#7c3aed;--accent-dark:#6d28d9;
+  --accent-light:#f5f3ff;--success:#16a34a;--success-bg:#f0fdf4;
+  --danger:#dc2626;--danger-bg:#fef2f2;--warn:#d97706;--warn-bg:#fffbeb;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;--input-bg:#f8fafc;
+  --shadow:0 1px 3px rgba(0,0,0,.08);--radius:12px;--radius-sm:8px;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+
+.sidebar{width:250px;min-height:100vh;background:var(--sidebar);display:flex;flex-direction:column;position:fixed;top:0;left:0;z-index:100;}
+.sidebar-logo{padding:22px 18px 18px;border-bottom:1px solid rgba(255,255,255,.07);}
+.logo-row{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:34px;height:34px;border-radius:9px;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#fff;}
+.logo-name{font-size:14px;font-weight:700;color:#fff;}
+.logo-sub{font-size:11px;color:rgba(255,255,255,.35);margin-top:2px;padding-left:44px;}
+.nav-section{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.3);padding:18px 18px 5px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;margin:2px 7px;border-radius:var(--radius-sm);cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;border:none;background:none;width:calc(100% - 14px);text-align:left;transition:all .15s;}
+.nav-item:hover{background:#1e293b;color:#fff;}
+.nav-item.active{background:var(--accent);color:#fff;}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;opacity:.8;}
+.sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid rgba(255,255,255,.07);}
+.user-row{display:flex;align-items:center;gap:9px;padding:8px 10px;background:rgba(255,255,255,.05);border-radius:var(--radius-sm);margin-bottom:8px;}
+.user-av{width:30px;height:30px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;}
+.user-nm{font-size:12px;font-weight:600;color:#fff;}
+.user-rl{font-size:10px;color:rgba(255,255,255,.35);}
+.btn-out{width:100%;padding:8px;background:rgba(220,38,38,.15);color:#fca5a5;border:1px solid rgba(220,38,38,.2);border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;}
+.btn-out:hover{background:rgba(220,38,38,.3);}
+
+.main{margin-left:250px;flex:1;}
+.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow);}
+.topbar h2{font-size:15px;font-weight:600;}
+.topbar p{font-size:11.5px;color:var(--muted);}
+.badge-ec{padding:3px 10px;background:var(--accent-light);color:var(--accent);border-radius:20px;font-size:11px;font-weight:600;}
+
+.content{padding:24px 28px;}
+.panel{display:none;}
+.panel.active{display:block;animation:fadeIn .2s ease;}
+/* Settings panel full-width centering */
+#settingsPanel { width:100%; }
+/* Toggle switch */
+.toggle-switch{position:relative;display:inline-block;width:40px;height:22px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#cbd5e1;border-radius:22px;transition:.2s;}
+.toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle-switch input:checked + .toggle-slider{background:var(--accent);}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(18px);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+.page-hdr{margin-bottom:20px;}
+.page-hdr h1{font-size:20px;font-weight:700;margin-bottom:2px;}
+.page-hdr p{font-size:13px;color:var(--muted);}
+
+.card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:18px;}
+.card-hdr{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.card-icon{width:34px;height:34px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:15px;}
+.card-title{font-size:14px;font-weight:600;}
+.card-sub{font-size:11.5px;color:var(--muted);}
+.card-body{padding:20px;}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);padding:16px;display:flex;align-items:center;gap:12px;}
+.stat-ico{width:40px;height:40px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.stat-num{font-size:22px;font-weight:700;color:var(--text);}
+.stat-lbl{font-size:11px;color:var(--muted);}
+
+/* Form */
+.form-sec{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 0 12px;padding-bottom:7px;border-bottom:1px solid var(--border);}
+.form-sec:first-child{margin-top:0;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+.span2{grid-column:1/-1;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11.5px;font-weight:600;color:var(--text);}
+.field label .req{color:var(--danger);margin-left:2px;}
+.field input,.field select{padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;color:var(--text);background:var(--input-bg);outline:none;transition:border-color .15s;appearance:none;-webkit-appearance:none;}
+.field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:32px;cursor:pointer;}
+.field input:focus,.field select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,58,237,.1);background:var(--white);}
+.field-hint{font-size:11px;color:var(--muted);}
+.field-hint.ok{color:var(--success);}
+.field-hint.bad{color:var(--danger);}
+
+/* Photo/sig upload */
+.upload-zone{border:2px dashed var(--border);border-radius:var(--radius-sm);padding:16px;text-align:center;cursor:pointer;background:var(--input-bg);transition:all .15s;}
+.upload-zone:hover{border-color:var(--accent);background:var(--accent-light);}
+.upload-zone input[type=file]{display:none;}
+.upload-preview{max-width:120px;max-height:60px;display:none;margin:0 auto 6px;border-radius:4px;border:1px solid var(--border);background:repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%) 0 0 / 10px 10px;padding:3px;}
+.upload-preview.show{display:block;}
+.upload-icon{font-size:24px;margin-bottom:4px;}
+.upload-text{font-size:12px;color:var(--muted);}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;border:none;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-primary:hover:not(:disabled){background:var(--accent-dark);transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.btn-ghost:hover{background:var(--bg);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-success:hover:not(:disabled){background:#15803d;}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .65s linear infinite;display:none;}
+.btn-primary.loading .spinner,.btn-success.loading .spinner{display:block;}
+.btn-primary.loading .lbl,.btn-success.loading .lbl{opacity:.7;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Alert */
+.alert{padding:11px 14px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:500;margin-bottom:14px;display:none;align-items:center;gap:8px;}
+.alert.show{display:flex;}
+.alert.success{background:var(--success-bg);color:#15803d;border:1px solid #bbf7d0;}
+.alert.error{background:var(--danger-bg);color:var(--danger);border:1px solid #fecaca;}
+.alert.warn{background:var(--warn-bg);color:var(--warn);border:1px solid #fde68a;}
+
+/* Table */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+thead th{background:#f8fafc;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 12px;border-bottom:1px solid var(--border);text-align:left;white-space:nowrap;}
+tbody td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:#f8fafc;}
+.pill{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10.5px;font-weight:600;}
+.pill-green{background:#dcfce7;color:#15803d;}
+.pill-red{background:#fee2e2;color:var(--danger);}
+.pill-blue{background:#dbeafe;color:#1d4ed8;}
+.pill-orange{background:#ffedd5;color:#c2410c;}
+.pill-gray{background:#f1f5f9;color:var(--muted);}
+.pill-purple{background:#f3e8ff;color:#7c3aed;}
+
+.empty-state{text-align:center;padding:36px 20px;color:var(--muted);}
+.empty-state .ico{font-size:36px;margin-bottom:10px;}
+
+/* Filters bar */
+.filters{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+.filters select,.filters input{padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:'Inter',sans-serif;font-size:12.5px;background:var(--white);outline:none;appearance:none;-webkit-appearance:none;}
+.filters select{min-width:160px;}
+.filters input{flex:1;min-width:180px;}
+.filters select:focus,.filters input:focus{border-color:var(--accent);}
+
+/* Progress indicator */
+.schedule-pct{font-size:11px;color:var(--muted);margin-left:8px;}
+.sig-status{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:var(--radius-sm);font-size:12.5px;font-weight:500;}
+.sig-status.ok{background:var(--success-bg);color:#15803d;}
+.sig-status.missing{background:var(--warn-bg);color:var(--warn);}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-row">
+      <div class="logo-icon">📋</div>
+      <div><div class="logo-name">Exam Controller</div></div>
+    </div>
+    <div class="logo-sub">Mohamed Sathak A.J. College</div>
+  </div>
+
+  <div class="nav-section">Hall Ticket</div>
+  <button class="nav-item active" onclick="showPanel('schedule',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    Set Exam Schedule
+  </button>
+  <button class="nav-item" onclick="showPanel('generate',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+    Generate Hall Tickets
+  </button>
+
+  <div class="nav-section">Profile</div>
+  <button class="nav-item" onclick="showPanel('profile',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    My Profile & Signature
+  </button>
+  <button class="nav-item" onclick="showPanel('settings',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    Profile Settings
+  </button>
+
+  <div class="sidebar-footer">
+    <div class="user-row">
+      <div class="user-av" id="ecAvatar">E</div>
+      <div><div class="user-nm" id="ecName">Exam Controller</div><div class="user-rl">EXAM_CONTROLLER</div></div>
+    </div>
+    <button class="btn-out" onclick="logout()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sign out
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div>
+      <h2 id="topbarTitle">Set Exam Schedule</h2>
+      <p id="topbarSub">Assign dates and sessions to subjects</p>
+    </div>
+    <span class="badge-ec">Exam Controller</span>
+  </header>
+
+  <div class="content">
+
+    <!-- ══ SCHEDULE PANEL ══════════════════════════════════════ -->
+    <div class="panel active" id="schedulePanel">
+      <div class="page-hdr">
+        <h1>Exam Schedule</h1>
+        <p>Set exam dates and sessions for each subject — these appear on student hall tickets</p>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat"><div class="stat-ico" style="background:#f3e8ff;">📚</div><div><div class="stat-num" id="statTotal">—</div><div class="stat-lbl">Total Subjects</div></div></div>
+        <div class="stat"><div class="stat-ico" style="background:#dcfce7;">✅</div><div><div class="stat-num" id="statScheduled">—</div><div class="stat-lbl">Scheduled</div></div></div>
+        <div class="stat"><div class="stat-ico" style="background:#fee2e2;">⚠️</div><div><div class="stat-num" id="statPending">—</div><div class="stat-lbl">Pending</div></div></div>
+        <div class="stat"><div class="stat-ico" style="background:#dbeafe;">🏢</div><div><div class="stat-num" id="statDepts">—</div><div class="stat-lbl">Departments</div></div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-icon" style="background:#f3e8ff;">📋</div>
+          <div><div class="card-title">Subject Schedule</div><div class="card-sub">Click any row to set / update the date and session</div></div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost btn-sm" onclick="exportExcel()" style="color:#16a34a;border-color:#bbf7d0;gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                Excel
+              </button>
+              <button class="btn btn-ghost btn-sm" onclick="exportPDF()" style="color:#dc2626;border-color:#fecaca;gap:5px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                PDF
+              </button>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="clearAllSchedule()" style="color:var(--danger);border-color:#fecaca;">🗑 Clear All</button>
+            <button class="btn btn-primary btn-sm" onclick="saveBulk()">
+              <div class="spinner"></div><span class="lbl">Save All Changes</span>
+            </button>
+          </div>
+        </div>
+        <div class="card-body" style="padding:14px;">
+          <div class="filters">
+            <select id="filterDept" onchange="filterSchedule()">
+              <option value="">All Departments</option>
+            </select>
+            <select id="filterSem" onchange="filterSchedule()">
+              <option value="">All Semesters</option>
+              <option value="1">Semester 1</option><option value="2">Semester 2</option>
+              <option value="3">Semester 3</option><option value="4">Semester 4</option>
+              <option value="5">Semester 5</option><option value="6">Semester 6</option>
+              <option value="7">Semester 7</option><option value="8">Semester 8</option>
+            </select>
+            <select id="filterStatus" onchange="filterSchedule()">
+              <option value="">All Status</option>
+              <option value="scheduled">Scheduled</option>
+              <option value="pending">Pending</option>
+            </select>
+            <input type="text" id="filterSearch" placeholder="Search subject or code…" oninput="filterSchedule()">
+          </div>
+          <div class="alert" id="scheduleAlert"></div>
+          <div id="scheduleTableWrap">
+            <div class="empty-state"><div class="ico">⏳</div><p>Loading subjects…</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GENERATE PANEL ══════════════════════════════════════ -->
+    <div class="panel" id="generatePanel">
+      <div class="page-hdr">
+        <h1>Generate Hall Tickets</h1>
+        <p>Generate and download hall tickets for eligible students</p>
+      </div>
+
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-icon" style="background:#dcfce7;">🎫</div>
+          <div><div class="card-title">Student List</div><div class="card-sub">Only eligible students (attendance ≥ 75% + fees paid) can have hall tickets generated</div></div>
+        </div>
+        <div class="card-body" style="padding:14px;">
+          <div class="filters">
+            <select id="genFilterDept" onchange="filterStudents()">
+              <option value="">All Departments</option>
+            </select>
+            <select id="genFilterStatus" onchange="filterStudents()">
+              <option value="">All Students</option>
+              <option value="eligible">Eligible Only</option>
+              <option value="ineligible">Not Eligible</option>
+            </select>
+            <input type="text" id="genSearch" placeholder="Search by name or roll no…" oninput="filterStudents()">
+          </div>
+          <!-- Arrear toggle slider -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid var(--border);">
+            <label class="toggle-switch">
+              <input type="checkbox" id="arrearOnlyToggle" onchange="filterStudents()">
+              <span class="toggle-slider"></span>
+            </label>
+            <div>
+              <div style="font-size:13px;font-weight:600;">Show Arrear Students Only</div>
+              <div style="font-size:11.5px;color:var(--muted);">Only show completed students who have applied for arrear exams</div>
+            </div>
+          </div>
+          <div class="alert" id="generateAlert"></div>
+          <div id="studentsTableWrap">
+            <div class="empty-state"><div class="ico">⏳</div><p>Loading students…</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ PROFILE PANEL ═══════════════════════════════════════ -->
+    <div class="panel" id="profilePanel">
+      <div class="page-hdr">
+        <h1>My Profile & Signature</h1>
+        <p>Your signature will appear on every hall ticket generated by the system</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr;gap:18px;align-items:start;max-width:600px;">
+
+        <!-- Signature upload -->
+        <div class="card">
+          <div class="card-hdr">
+            <div class="card-icon" style="background:#dbeafe;">✍️</div>
+            <div>
+              <div class="card-title">Signature Image</div>
+              <div class="card-sub">Appears in the sign box on hall ticket PDF</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div id="sigStatus" class="sig-status missing">
+              ⚠️ No signature uploaded yet — hall tickets will show an empty sign box
+            </div>
+
+            <!-- Existing signature preview (shown after upload) -->
+            <div id="sigExistingWrap" style="display:none;margin:12px 0;">
+              <div style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;">
+                <img id="sigCurrentPreview" style="max-height:44px;max-width:130px;object-fit:contain;border:1px solid #d1fae5;border-radius:4px;background:repeating-conic-gradient(#e5e7eb 0% 25%, #fff 0% 50%) 0 0 / 10px 10px;padding:3px;" src="" alt="Signature">
+                <div style="flex:1;">
+                  <div style="font-size:12px;font-weight:600;color:var(--success);margin-bottom:2px;">✓ Signature active</div>
+                  <div style="font-size:11px;color:var(--muted);">Appears on every generated hall ticket</div>
+                </div>
+                <button onclick="showChangeSig()" class="btn btn-primary btn-sm" style="white-space:nowrap;flex-shrink:0;background:#6366f1;border-color:#6366f1;">✏ Change</button>
+              </div>
+            </div>
+
+            <!-- Upload area -->
+            <div id="sigUploadWrap" style="margin:12px 0;">
+              <label style="font-size:12px;font-weight:600;display:block;margin-bottom:6px;">Upload Signature <span class="req">*</span></label>
+              <div class="upload-zone" onclick="document.getElementById('sigFile').click()">
+                <img id="sigPreview" class="upload-preview" src="" alt="">
+                <div id="sigPlaceholder">
+                  <div class="upload-icon">✍️</div>
+                  <div class="upload-text">Click to upload signature image</div>
+                  <div style="font-size:11px;color:#94a3b8;margin-top:3px;">White background preferred · JPG/PNG · Max 3MB</div>
+                </div>
+                <input type="file" id="sigFile" accept="image/jpeg,image/png,image/webp">
+              </div>
+              <div class="field-hint" id="sigHint" style="margin-top:6px;">Upload a clear scan of your signature on white paper</div>
+              <div style="display:flex;gap:8px;margin-top:10px;">
+                <button class="btn btn-primary" id="uploadSigBtn" onclick="uploadSignature()">
+                  <div class="spinner"></div>
+                  <span class="lbl">Upload Signature</span>
+                </button>
+                <button class="btn btn-ghost btn-sm" id="cancelSigBtn" style="display:none;" onclick="cancelChangeSig()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+      </div>
+
+      <!-- Hall ticket preview info -->
+      <div class="card">
+        <div class="card-hdr">
+          <div class="card-icon" style="background:#dcfce7;">👁️</div>
+          <div><div class="card-title">How your signature appears on hall tickets</div></div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;">
+            <div style="padding:16px;text-align:center;border-right:1px solid var(--border);background:#f5f3ff;">
+              <div style="height:44px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;" id="sigBoxPreview">
+                <span style="font-size:11px;color:#94a3b8;font-style:italic;">Your signature image here</span>
+              </div>
+              <div style="font-size:10px;color:var(--accent);font-weight:600;" id="controllerNamePreview">Controller of Examinations</div>
+              <div style="font-size:10px;color:var(--muted);border-top:1px solid var(--text);padding-top:4px;margin-top:2px;" id="controllerDesPreview">Controller of Examinations</div>
+            </div>
+            <div style="padding:16px;text-align:center;">
+              <div style="height:44px;display:flex;align-items:center;justify-content:center;margin-bottom:8px;">
+                <span style="font-size:13px;color:var(--muted);font-style:italic;">Principal signs here</span>
+              </div>
+              <div style="font-size:11px;color:var(--muted);border-top:1px solid var(--text);padding-top:4px;">Signature of the Principal with seal</div>
+            </div>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-top:10px;">The box highlighted in purple is where your uploaded signature will appear automatically on every generated hall ticket.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+    <!-- ══ SETTINGS PANEL ════════════════════════════════════ -->
+    <!-- ══ SETTINGS PANEL ════════════════════════════════════ -->
+    <div class="panel" id="settingsPanel">
+      <div style="width:100%;max-width:740px;margin:0 auto;box-sizing:border-box;">
+
+        <div class="alert" id="settingsAlert" style="margin-bottom:14px;"></div>
+
+        <div class="card">
+          <div class="card-body" style="padding:28px 32px;">
+            <div style="display:flex;gap:32px;align-items:flex-start;">
+
+              <!-- Photo section -->
+              <div style="display:flex;flex-direction:column;align-items:center;gap:10px;min-width:140px;">
+                <div id="settingsAvatarWrap"
+                  style="width:120px;height:120px;border-radius:50%;
+                         background:var(--accent-light);border:3px solid var(--accent);
+                         overflow:hidden;display:flex;align-items:center;
+                         justify-content:center;font-size:46px;cursor:pointer;"
+                  onclick="document.getElementById('settingsPhotoFile').click()">👤</div>
+                <input type="file" id="settingsPhotoFile" accept="image/jpeg,image/png,image/webp"
+                       style="display:none" onchange="previewSettingsPhoto(this)">
+                <button onclick="document.getElementById('settingsPhotoFile').click()"
+                  class="btn btn-ghost btn-sm" style="width:100%;font-size:11.5px;">
+                  📷 Change Photo
+                </button>
+                <button onclick="uploadSettingsPhoto()" class="btn btn-primary btn-sm"
+                  style="width:100%;font-size:11.5px;" id="uploadPhotoBtn">
+                  <div class="spinner"></div><span class="lbl">Upload</span>
+                </button>
+                <div style="font-size:11px;color:var(--muted);text-align:center;" id="settingsRoleLabel">
+                  Controller of Examinations
+                </div>
+              </div>
+
+              <!-- Divider -->
+              <div style="width:1px;background:var(--border);align-self:stretch;"></div>
+
+              <!-- Form section -->
+              <div style="flex:1;">
+                <!-- Read-only fields -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+                  <div class="field">
+                    <label style="color:var(--muted);">Email <span style="font-size:10px;color:#94a3b8;">(read only)</span></label>
+                    <input type="text" id="sEmail" readonly
+                      style="background:var(--input-bg);color:var(--muted);cursor:not-allowed;">
+                  </div>
+                  <div class="field">
+                    <label style="color:var(--muted);">Employee ID <span style="font-size:10px;color:#94a3b8;">(read only)</span></label>
+                    <input type="text" id="sEmpId" readonly
+                      style="background:var(--input-bg);color:var(--muted);cursor:not-allowed;font-family:monospace;">
+                  </div>
+                </div>
+
+                <!-- Editable fields -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                  <div class="field">
+                    <label>Full Name</label>
+                    <input type="text" id="sName" placeholder="Enter your full name">
+                  </div>
+                  <div class="field">
+                    <label>Phone Number</label>
+                    <input type="tel" id="sPhone" maxlength="10" placeholder="10-digit mobile">
+                  </div>
+                  <div class="field" style="grid-column:1/-1;">
+                    <label>Date of Birth</label>
+                    <input type="date" id="sDob" style="max-width:220px;">
+                  </div>
+                </div>
+
+                <!-- Hidden designation field (still sent to API) -->
+                <input type="hidden" id="sDesignation">
+
+                <button onclick="saveSettings()" class="btn btn-primary" id="saveSettingsBtn"
+                  style="margin-top:22px;width:100%;padding:12px;font-size:13px;">
+                  <div class="spinner"></div><span class="lbl">Save Changes</span>
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- Custom Crop Modal -->
+<div id="cropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border-radius:18px;padding:22px;width:720px;max-width:97vw;box-shadow:0 25px 60px rgba(0,0,0,.6);">
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#fff;">Crop Signature</div>
+        <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">Drag image to reposition · Use slider to zoom</div>
+      </div>
+      <button onclick="closeCropModal()" style="background:rgba(255,255,255,.1);border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center;line-height:1;">×</button>
+    </div>
+
+    <!-- Canvas + Preview side by side -->
+    <div style="display:grid;grid-template-columns:1fr 220px;gap:16px;align-items:start;">
+
+      <!-- Left: crop frame -->
+      <div>
+        <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.08em;margin-bottom:6px;">DRAG IMAGE · FIXED SQUARE FRAME</div>
+        <div style="position:relative;display:inline-block;width:100%;">
+          <!-- Canvas where image is drawn -->
+          <canvas id="cropCanvas"
+            style="display:block;width:100%;border-radius:10px;cursor:grab;touch-action:none;background:#0f172a;"
+            onmousedown="cropDragStart(event)"
+            onmousemove="cropDragMove(event)"
+            onmouseup="cropDragEnd()"
+            onmouseleave="cropDragEnd()"
+            onwheel="cropWheel(event)">
+          </canvas>
+          <!-- Fixed crop frame overlay (dark corners) -->
+          <canvas id="cropOverlay"
+            style="position:absolute;top:0;left:0;width:100%;border-radius:10px;pointer-events:none;">
+          </canvas>
+        </div>
+      </div>
+
+      <!-- Right: live preview + controls -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.08em;margin-bottom:6px;">LIVE PREVIEW</div>
+          <!-- Landscape preview matching signature shape -->
+          <div style="width:100%;aspect-ratio:3/1;background:#fff;border-radius:8px;overflow:hidden;border:2px solid rgba(124,58,237,.5);display:flex;align-items:center;justify-content:center;">
+            <canvas id="cropPreviewCanvas" style="width:100%;height:100%;object-fit:contain;"></canvas>
+          </div>
+          <div id="cropSizeInfo" style="font-size:10px;color:#64748b;margin-top:5px;text-align:center;"></div>
+        </div>
+
+        <!-- Zoom slider -->
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.08em;margin-bottom:8px;">ZOOM</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button onclick="cropZoom(-0.1)" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">−</button>
+            <input type="range" id="zoomSlider" min="0.5" max="4" step="0.05" value="1"
+              oninput="cropZoomSlider(this.value)"
+              style="flex:1;accent-color:#7c3aed;cursor:pointer;">
+            <button onclick="cropZoom(0.1)" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">+</button>
+          </div>
+          <div id="zoomLabel" style="font-size:10px;color:#64748b;text-align:center;margin-top:4px;">100%</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+          <button onclick="resetCrop()" class="btn btn-ghost btn-sm" style="color:#94a3b8;border-color:rgba(255,255,255,.15);">↺ Reset</button>
+          <button onclick="applyCrop()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✓ Use This Crop</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+const API = 'http://localhost:8080';
+let currentUser = {}, controllerId = null, controllerSigUrl = null;
+let allSubjects = [], allStudents = [], pendingChanges = {};
+
+// ── Init ──────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+    try { currentUser = JSON.parse(sessionStorage.getItem('user') || '{}'); } catch { currentUser = {}; }
+    if (!currentUser.role || !['ADMIN','EXAM_CONTROLLER'].includes(currentUser.role)) {
+        alert('Access denied.');
+        window.location.href = 'index.html'; return;
+    }
+    const name = currentUser.name || currentUser.username || 'Exam Controller';
+    document.getElementById('ecName').textContent = name;
+    document.getElementById('ecAvatar').textContent = name.charAt(0).toUpperCase();
+
+    // Set controllerId directly from session (returned by login)
+    controllerId = currentUser.controllerId || null;
+    // Update sig status immediately from session data
+    if (currentUser.hasSignature) {
+        const sigEl = document.getElementById('sigStatus');
+        if (sigEl) { sigEl.textContent = '✓ Signature uploaded — will appear on hall tickets'; sigEl.className = 'sig-status ok'; }
+        document.getElementById('sigExistingWrap').style.display = 'block';
+        document.getElementById('sigUploadWrap').style.display   = 'none';
+    }
+    await Promise.all([loadDepts(), loadSubjects(), loadStudents(), loadProfile()]);
+});
+
+// ── Navigation ─────────────────────────────────────────────────
+const PANELS = {
+    schedule: { title:'Set Exam Schedule',       sub:'Assign exam dates and sessions to subjects' },
+    generate: { title:'Generate Hall Tickets',   sub:'Generate PDFs for eligible students' },
+    profile:  { title:'My Profile & Signature',  sub:'Upload your signature for hall tickets' },
+    settings: { title:'Profile Settings',          sub:'Update your personal details and photo', extra: loadSettings },
+};
+function showPanel(id, btn) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(id+'Panel').classList.add('active');
+    if (btn) btn.classList.add('active');
+    const m = PANELS[id];
+    if (m) {
+        document.getElementById('topbarTitle').textContent = m.title;
+        document.getElementById('topbarSub').textContent  = m.sub;
+        if (m.extra) m.extra(); // call panel init function
+    }
+}
+
+// ── Load departments ───────────────────────────────────────────
+async function loadDepts() {
+    try {
+        const res = await fetch(`${API}/departments/all`);
+        const depts = await res.json();
+        const opts = '<option value="">All Departments</option>' +
+            depts.map(d => `<option value="${d.deptId}">${esc(d.deptName)}</option>`).join('');
+        document.getElementById('filterDept').innerHTML = opts;
+        // Also populate generate panel dept filter
+        const genOpts = '<option value="">All Departments</option>' +
+            depts.map(d => `<option value="${d.deptId}">${esc(d.deptName)}</option>`).join('');
+        const genDept = document.getElementById('genFilterDept');
+        if (genDept) genDept.innerHTML = genOpts;
+        document.getElementById('genFilterDept').innerHTML = opts;
+        document.getElementById('statDepts').textContent = depts.length;
+    } catch {}
+}
+
+// ── Load subjects ──────────────────────────────────────────────
+async function loadSubjects() {
+    try {
+        const res = await fetch(`${API}/exam-controller/subjects`);
+        if (!res.ok) throw new Error(`Server error: ${res.status}`);
+        allSubjects = await res.json();
+        if (!Array.isArray(allSubjects)) throw new Error('Invalid response from server');
+        document.getElementById('statTotal').textContent     = allSubjects.length;
+        document.getElementById('statScheduled').textContent = allSubjects.filter(s=>s.scheduled).length;
+        document.getElementById('statPending').textContent   = allSubjects.filter(s=>!s.scheduled).length;
+
+        // Populate semester filter dynamically from actual data
+        const sems = [...new Set(allSubjects.map(s=>s.semester).filter(Boolean))].sort((a,b)=>a-b);
+        const semSel = document.getElementById('filterSem');
+        semSel.innerHTML = '<option value="">All Semesters</option>' +
+            sems.map(s => `<option value="${s}">Semester ${s}</option>`).join('');
+
+        renderScheduleTable(allSubjects);
+    } catch(e) {
+        showAlert('scheduleAlert', `Failed to load subjects: ${e.message}`, 'error');
+    }
+}
+
+function renderScheduleTable(subjects) {
+    const wrap = document.getElementById('scheduleTableWrap');
+    if (!subjects.length) {
+        wrap.innerHTML = '<div class="empty-state"><div class="ico">📚</div><p>No subjects found</p></div>'; return;
+    }
+    wrap.innerHTML = `<div class="table-wrap"><table>
+        <thead><tr>
+            <th>Code</th><th>Subject Name</th><th>Dept</th><th>Sem</th><th>Type</th>
+            <th>Exam Date</th><th>Session</th><th>Status</th><th>Action</th>
+        </tr></thead>
+        <tbody>${subjects.map(s => `<tr>
+            <td style="font-family:monospace;font-size:11px;color:var(--accent);">${esc(s.subjectCode||'—')}</td>
+            <td style="font-weight:500;max-width:200px;">${esc(s.name)}</td>
+            <td style="font-size:11.5px;color:var(--muted);">${esc(s.department)}</td>
+            <td style="text-align:center;">${s.semester||'—'}</td>
+            <td><span class="pill ${s.type==='INTEGRATED'?'pill-purple':s.type==='PRACTICAL'?'pill-blue':'pill-gray'}">${esc(s.type)}</span></td>
+            <td>
+                <input type="date" id="date_${s.subjectId}" data-id="${s.subjectId}" data-field="examDate"
+                    value="${s.examDate||''}"
+                    onchange="markChange(${s.subjectId},'examDate',this.value)"
+                    style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;background:var(--input-bg);outline:none;cursor:pointer;"
+                    onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+            </td>
+            <td>
+                <select id="sess_${s.subjectId}" data-id="${s.subjectId}" data-field="session"
+                    onchange="markChange(${s.subjectId},'session',this.value)"
+                    style="padding:5px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:'Inter',sans-serif;background:var(--input-bg);outline:none;cursor:pointer;min-width:70px;"
+                    onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+                    <option value="" ${!s.session?'selected':''}>—</option>
+                    <option value="FN" ${s.session==='FN'?'selected':''}>FN</option>
+                    <option value="AN" ${s.session==='AN'?'selected':''}>AN</option>
+                </select>
+            </td>
+            <td><span class="pill ${s.scheduled?'pill-green':'pill-orange'}">${s.scheduled?'✓ Set':'Pending'}</span></td>
+            <td>
+                <button onclick="saveRow(${s.subjectId})"
+                    style="padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">
+                    Update
+                </button>
+            </td>
+        </tr>`).join('')}
+        </tbody>
+    </table></div>`;
+}
+
+function markChange(id, field, value) {
+    if (!pendingChanges[id]) pendingChanges[id] = { subjectId: String(id) };
+    pendingChanges[id][field] = value;
+    // Visual indicator
+    const inputs = document.querySelectorAll(`[data-id="${id}"]`);
+    inputs.forEach(inp => inp.style.borderColor = '#f59e0b');
+}
+
+function filterSchedule() {
+    const dept   = document.getElementById('filterDept').value;
+    const sem    = document.getElementById('filterSem').value;
+    const status = document.getElementById('filterStatus').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+    let filtered = allSubjects;
+    // dept value is deptId (number string) — compare with s.deptId
+    if (dept)   filtered = filtered.filter(s => String(s.deptId||'') === String(dept));
+    if (sem)    filtered = filtered.filter(s => String(s.semester) === sem);
+    if (status==='scheduled') filtered = filtered.filter(s => s.scheduled);
+    if (status==='pending')   filtered = filtered.filter(s => !s.scheduled);
+    if (search) filtered = filtered.filter(s =>
+        (s.name||'').toLowerCase().includes(search) ||
+        (s.subjectCode||'').toLowerCase().includes(search));
+    renderScheduleTable(filtered);
+}
+
+async function clearAllSchedule() {
+    if (!confirm('Clear exam dates and sessions for ALL subjects? This cannot be undone.')) return;
+    // Build clear payload for all subjects
+    const items = allSubjects.map(s => ({ subjectId: String(s.subjectId), examDate: '', session: '' }));
+    try {
+        const res  = await fetch(`${API}/exam-controller/subjects/bulk-schedule`, {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(items)
+        });
+        const data = await res.json();
+        showAlert('scheduleAlert', `✓ Cleared ${data.updated} subject(s).`, 'success');
+        pendingChanges = {};
+        await loadSubjects();
+    } catch { showAlert('scheduleAlert','Failed to clear.','error'); }
+}
+
+async function saveRow(subjectId) {
+    const dateEl = document.getElementById('date_' + subjectId);
+    const sessEl = document.getElementById('sess_' + subjectId);
+    if (!dateEl || !sessEl) return;
+    const item = { subjectId: String(subjectId), examDate: dateEl.value, session: sessEl.value };
+    try {
+        const res  = await fetch(`${API}/exam-controller/subjects/bulk-schedule`, {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify([item])
+        });
+        const data = await res.json();
+        if (data.updated > 0) {
+            showAlert('scheduleAlert', `✓ Updated: ${dateEl.value || '—'} | ${sessEl.value || '—'}`, 'success');
+            // Update local data
+            const sub = allSubjects.find(s => s.subjectId == subjectId);
+            if (sub) { sub.examDate = dateEl.value; sub.session = sessEl.value; sub.scheduled = !!(dateEl.value && sessEl.value); }
+            // Update status pill
+            const rows = document.querySelectorAll(`[data-id="${subjectId}"]`);
+            rows.forEach(el => el.style.borderColor = 'var(--success)');
+            setTimeout(() => rows.forEach(el => el.style.borderColor = 'var(--border)'), 2000);
+            // Update stats
+            document.getElementById('statScheduled').textContent = allSubjects.filter(s=>s.scheduled).length;
+            document.getElementById('statPending').textContent   = allSubjects.filter(s=>!s.scheduled).length;
+        }
+    } catch { showAlert('scheduleAlert','Failed to update row.','error'); }
+}
+
+async function saveBulk() {
+    const items = Object.values(pendingChanges);
+    if (!items.length) { showAlert('scheduleAlert','No changes to save.','warn'); return; }
+    const btn = document.querySelector('[onclick="saveBulk()"]');
+    btn.disabled=true; btn.classList.add('loading');
+    try {
+        const res  = await fetch(`${API}/exam-controller/subjects/bulk-schedule`, {
+            method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(items)
+        });
+        const data = await res.json();
+        showAlert('scheduleAlert', `✓ ${data.updated} subject(s) updated.` + (data.errors?.length ? ` Errors: ${data.errors.join(', ')}` : ''), 'success');
+        pendingChanges = {};
+        await loadSubjects();
+    } catch { showAlert('scheduleAlert','Failed to save. Check server.','error'); }
+    finally { btn.disabled=false; btn.classList.remove('loading'); }
+}
+
+function exportExcel() {
+    const subjects = getFilteredSubjects();
+    if (!subjects.length) { alert('No subjects to export.'); return; }
+    const deptEl = document.getElementById('filterDept');
+    const dept = deptEl.options[deptEl.selectedIndex]?.text || 'All Departments';
+    const semVal = document.getElementById('filterSem').value;
+    const sem = semVal ? 'Semester ' + semVal : 'All Semesters';
+    const title = 'Exam Schedule — ' + dept + ' — ' + sem;
+    const dateNow = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+
+    let html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8">';
+    html += '<!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Exam Schedule</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->';
+    html += '<style>body{font-family:Arial;}h2{color:#1e3a5f;}table{border-collapse:collapse;width:100%;}th{background:#1e3a5f;color:#fff;padding:8px 10px;font-size:12px;text-align:left;}td{padding:7px 10px;font-size:11px;border-bottom:1px solid #e2e8f0;}tr:nth-child(even) td{background:#f8fafc;}.set{color:#16a34a;font-weight:600;}.pend{color:#d97706;font-weight:600;}</style>';
+    html += '</head><body><h2>' + title + '</h2>';
+    html += '<p style="font-size:11px;color:#64748b;">Generated: ' + dateNow + '</p>';
+    html += '<table><thead><tr><th>Sub. Code</th><th>Subject Name</th><th>Department</th><th>Sem</th><th>Type</th><th>Exam Date</th><th>Session</th><th>Status</th></tr></thead><tbody>';
+    subjects.forEach(s => {
+        const d = s.examDate ? new Date(s.examDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—';
+        html += '<tr><td><b>' + (s.subjectCode||'—') + '</b></td><td>' + (s.name||'—') + '</td><td>' + (s.department||'—') + '</td>';
+        html += '<td style="text-align:center;">' + (s.semester||'—') + '</td><td>' + (s.type||'—') + '</td><td>' + d + '</td>';
+        html += '<td style="text-align:center;">' + (s.session||'—') + '</td>';
+        html += '<td class="' + (s.scheduled?'set':'pend') + '">' + (s.scheduled?'Scheduled':'Pending') + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    html += '<p style="margin-top:14px;font-size:10px;color:#94a3b8;">Total: ' + subjects.length + ' | Scheduled: ' + subjects.filter(s=>s.scheduled).length + ' | Pending: ' + subjects.filter(s=>!s.scheduled).length + '</p>';
+    html += '</body></html>';
+
+    const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const fname = 'Exam_Schedule_' + dept.replace(/[^a-z0-9]/gi,'_') + '_' + new Date().toISOString().slice(0,10) + '.xls';
+    a.href = url; a.download = fname; a.click();
+    URL.revokeObjectURL(url);
+}
+
+function exportPDF() {
+    const subjects = getFilteredSubjects();
+    if (!subjects.length) { alert('No subjects to export.'); return; }
+    const deptEl  = document.getElementById('filterDept');
+    const dept    = deptEl.options[deptEl.selectedIndex]?.text || 'All Departments';
+    const semVal  = document.getElementById('filterSem').value;
+    const dateNow = new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'});
+
+    // Fetch signature as base64 first (avoids cross-origin issues in print popup)
+    const fetchSig = controllerSigUrl
+        ? fetch(controllerSigUrl).then(r => r.blob()).then(b => new Promise(res => {
+            const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(b);
+          })).catch(() => null)
+        : Promise.resolve(null);
+
+    fetchSig.then(sigBase64 => _buildAndPrintPDF(subjects, dept, semVal, dateNow, sigBase64));
+}
+
+function _buildAndPrintPDF(subjects, dept, semVal, dateNow, sigBase64) {
+
+    const win = window.open('', '_blank');
+    let html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Exam Schedule</title>
+    <style>
+      @page { size: A4; margin: 14mm; }
+      * { margin:0; padding:0; box-sizing:border-box; }
+      body { font-family: "Times New Roman", Times, serif; font-size: 11px; color: #000; }
+
+      /* ── HEADER ── */
+      .page-header { text-align: center; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 6px; }
+      .page-header h1 { font-size: 12px; font-weight: bold; line-height: 1.6; }
+
+      /* ── BRANCH LINE ── */
+      .branch-line { display: flex; align-items: baseline; gap: 20px; margin: 6px 0 6px; font-size: 11px; font-weight: bold; }
+
+      /* ── TABLE ── */
+      table { width: 100%; border-collapse: collapse; }
+      th, td {
+        border: 1px solid #000;
+        padding: 0 5px;
+        font-size: 10.5px;
+        height: 18px;
+        line-height: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      th { font-weight: bold; text-align: center; background: #fff; font-style: italic; }
+      td.num  { text-align: center; width: 30px; }
+      td.sem  { text-align: center; width: 34px; }
+      td.code { text-align: center; width: 72px; }
+      td.name { text-align: left; white-space: normal; }
+      td.date { text-align: center; width: 76px; }
+      td.sess { text-align: center; width: 44px; }
+      .sem-hdr td { background: #e0e0e0; font-weight: bold; font-style: italic; height: 18px; line-height: 18px; }
+
+      /* ── FOOTER ── */
+      .note-box { border: 1px solid #000; padding: 6px 10px; margin-top: 10px; font-size: 10px; }
+      .note-box p { margin-bottom: 3px; line-height: 1.4; }
+      .note-box strong { font-weight: bold; }
+      .page-footer { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 6px; padding-top: 4px; border-top: 1px solid #000; }
+      .page-footer .legend { font-size: 10px; line-height: 1.6; }
+      .page-footer .sig-block { text-align: center; font-size: 11px; font-weight: bold; }
+      .page-footer .sig-block img { display: block; max-height: 36px; max-width: 120px; margin: 0 auto 3px auto; object-fit: contain; }
+      .page-footer .sig-block .sig-space { height: 36px; }
+    </style></head><body>`;
+
+    // ── PAGE HEADER
+    html += `<div class="page-header">
+      <h1>MOHAMED SATHAK A.J. COLLEGE OF ENGINEERING, CHENNAI<br>
+      TIME TABLE — B.E. DEGREE EXAMINATIONS<br>
+      END SEMESTER EXAMINATIONS — ${getExamPeriodLabel()}<br>
+      (AUTONOMOUS INSTITUTION)</h1>
+    </div>`;
+
+    // ── BRANCH LINE
+    html += `<div class="branch-line">
+      <span>Department:</span><span>${dept}</span>
+      ${semVal ? `<span style="margin-left:24px;">Semester:</span><span>${semVal}</span>` : ''}
+    </div>`;
+
+    // ── TABLE
+    html += `<table>
+      <thead>
+        <tr>
+          <th class="num">S.No</th>
+          <th class="sem">Sem</th>
+          <th class="code">Subject Code</th>
+          <th class="name">Subject Name</th>
+          <th class="date">Exam Date</th>
+          <th class="sess">Session</th>
+        </tr>
+      </thead>
+      <tbody>`;
+
+    let sno = 1;
+    const sorted = [...subjects].sort((a,b) => {
+        if ((a.semester||0) !== (b.semester||0)) return (a.semester||0) - (b.semester||0);
+        return (a.examDate||'').localeCompare(b.examDate||'');
+    });
+
+    let lastSem = null;
+    sorted.forEach(s => {
+        if (s.semester !== lastSem) {
+            html += `<tr class="sem-hdr"><td colspan="6" style="padding:0 8px;">Semester ${s.semester||'—'}</td></tr>`;
+            lastSem = s.semester;
+        }
+        const d = s.examDate ? new Date(s.examDate).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}).toUpperCase() : '—';
+        const sess = s.session || '—';
+        html += `<tr>
+          <td class="num">${sno++}</td>
+          <td class="sem">${s.semester||'—'}</td>
+          <td class="code">${s.subjectCode||'—'}</td>
+          <td class="name">${s.name||'—'}</td>
+          <td class="date">${d}</td>
+          <td class="sess">${sess}</td>
+        </tr>`;
+    });
+
+    html += `</tbody></table>`;
+
+    // ── NOTE BOX + FOOTER
+    const sigImgHtml = sigBase64
+        ? `<img src="${sigBase64}" alt="Signature" style="display:block;max-height:36px;max-width:120px;margin:0 auto 3px auto;object-fit:contain;">`
+        : `<div class="sig-space"></div>`;
+    html += `<div class="note-box">
+      <p><strong>IMPORTANT NOTE :</strong></p>
+      <p>(1) Students are requested to strictly adhere to the dates, subjects and sessions mentioned in the Examination timetable and in your hall ticket to write the examinations.</p>
+      <p>(2) Candidates must bring their hall ticket on all days of examination.</p>
+    </div>
+    <div class="page-footer">
+      <div class="legend">
+        <div><strong>FN:</strong> FORENOON (10.00 A.M. TO 01.00 P.M.)</div>
+        <div><strong>AN:</strong> AFTERNOON (02.00 P.M. TO 05.00 P.M.)</div>
+        <div style="margin-top:4px;font-size:9.5px;color:#444;">Generated: ${dateNow}</div>
+      </div>
+      <div class="sig-block">
+        ${sigImgHtml}
+        <div>CONTROLLER OF EXAMINATIONS</div>
+      </div>
+    </div>`;
+
+    html += `<script>window.onload=()=>{window.print();window.onafterprint=()=>window.close();}<\/script>`;
+    html += `</body></html>`;
+
+    win.document.write(html);
+    win.document.close();
+}
+
+function getExamPeriodLabel() {
+    const m = new Date().getMonth() + 1, y = new Date().getFullYear();
+    if (m >= 4 && m <= 6)  return 'MAY / JUNE ' + y;
+    if (m >= 10 && m <= 12) return 'NOVEMBER / DECEMBER ' + y;
+    return 'APRIL / MAY ' + y;
+}
+
+
+function getFilteredSubjects() {
+    const dept   = document.getElementById('filterDept').value;
+    const sem    = document.getElementById('filterSem').value;
+    const status = document.getElementById('filterStatus').value;
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+    let f = allSubjects;
+    if (dept)   f = f.filter(s => String(s.deptId||'') === String(dept));
+    if (sem)    f = f.filter(s => String(s.semester) === sem);
+    if (status==='scheduled') f = f.filter(s => s.scheduled);
+    if (status==='pending')   f = f.filter(s => !s.scheduled);
+    if (search) f = f.filter(s =>
+        (s.name||'').toLowerCase().includes(search) ||
+        (s.subjectCode||'').toLowerCase().includes(search));
+    return f;
+}
+
+// ── Students ───────────────────────────────────────────────────
+async function loadStudents() {
+    try {
+        const res = await fetch(`${API}/exam-controller/students`);
+        allStudents = await res.json();
+        renderStudentsTable(allStudents);
+    } catch { showAlert('generateAlert','Failed to load students.','error'); }
+}
+
+function renderStudentsTable(students) {
+    const wrap = document.getElementById('studentsTableWrap');
+    if (!students.length) {
+        wrap.innerHTML = '<div class="empty-state"><div class="ico">👨‍🎓</div><p>No students found</p></div>'; return;
+    }
+    const eligible = students.filter(s=>s.canGenerate).length;
+    wrap.innerHTML = `
+        <div style="font-size:12.5px;color:var(--muted);margin-bottom:10px;">
+            ${students.length} students · <span style="color:var(--success);font-weight:600;">${eligible} eligible</span>
+        </div>
+        <div class="table-wrap"><table>
+        <thead><tr>
+            <th>Roll No</th><th>Name</th><th>Dept</th><th>Sem</th>
+            <th>Attendance</th><th>Fee Paid</th><th>Status</th><th>Action</th>
+        </tr></thead>
+        <tbody>${students.map(s => {
+            const ok = s.canGenerate;
+            const attColor = s.eligible ? 'var(--success)' : 'var(--danger)';
+            const attBg    = s.eligible ? '#f0fdf4' : '#fef2f2';
+            return `<tr>
+                <td style="font-family:monospace;font-size:11.5px;">${esc(s.rollNo)}</td>
+                <td style="font-weight:500;">${esc(s.name)}</td>
+                <td style="font-size:11.5px;color:var(--muted);">${esc(s.department)}</td>
+                <td style="text-align:center;">${s.semester}</td>
+                <td><span style="background:${attBg};color:${attColor};padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;">${s.attendance}%</span></td>
+                <td style="text-align:center;">${s.feePaid?'<span class="pill pill-green">Paid</span>':'<span class="pill pill-orange">Unpaid</span>'}</td>
+                <td>${ok?'<span class="pill pill-green">✓ Eligible</span>':'<span class="pill pill-red">Not Eligible</span>'}</td>
+                <td>
+                    ${ok ? `<button onclick="generateHallTicket(${s.studentId},'${esc(s.rollNo)}')"
+                        style="padding:5px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;">
+                        ⬇ Generate
+                    </button>` : `<span style="font-size:11.5px;color:#94a3b8;">—</span>`}
+                </td>
+            </tr>`;
+        }).join('')}
+        </tbody>
+    </table></div>`;
+}
+
+function filterStudents() {
+    const dept        = document.getElementById('genFilterDept').value;
+    const status      = document.getElementById('genFilterStatus').value;
+    const search      = document.getElementById('genSearch').value.toLowerCase();
+    const arrearOnly  = document.getElementById('arrearOnlyToggle')?.checked;
+    let f = allStudents;
+    if (arrearOnly) f = f.filter(s => s.programmeStatus === 'COMPLETED' || s.hasArrear);
+    if (dept)   f = f.filter(s => String(s.deptId||'') === String(dept));
+    if (status==='eligible')   f = f.filter(s=>s.canGenerate);
+    if (status==='ineligible') f = f.filter(s=>!s.canGenerate);
+    if (search) f = f.filter(s=>(s.name||'').toLowerCase().includes(search)||(s.rollNo||'').toLowerCase().includes(search));
+    renderStudentsTable(f);
+}
+
+async function generateHallTicket(studentId, rollNo) {
+    try {
+        const chk = await (await fetch(`${API}/exam-controller/hall-ticket/check/${studentId}`)).json();
+        if (!chk.eligible) { showAlert('generateAlert', '✗ ' + chk.message, 'error'); return; }
+        window.open(`${API}/exam-controller/hall-ticket/download/${studentId}`, '_blank');
+    } catch(e) { showAlert('generateAlert','Error: '+e.message,'error'); }
+}
+
+// ── Profile & Signature ────────────────────────────────────────
+async function loadProfile() {
+    try {
+        const email = currentUser.email || currentUser.username;
+        const res = await fetch(`${API}/exam-controller/me?email=${encodeURIComponent(email)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        // Update controllerId from API response (most reliable source)
+        controllerId = data.controllerId || currentUser.controllerId;
+
+        document.getElementById('controllerNamePreview').textContent = data.name || 'Controller of Examinations';
+        document.getElementById('controllerDesPreview').textContent  = data.designation || 'Controller of Examinations';
+
+        const wrap = document.getElementById('profileInfoWrap');
+        wrap.innerHTML = `
+            <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+                    <span style="font-size:12px;color:var(--muted);">Name</span>
+                    <span style="font-size:13px;font-weight:600;">${esc(data.name)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+                    <span style="font-size:12px;color:var(--muted);">Employee ID</span>
+                    <span style="font-size:13px;font-family:monospace;">${esc(data.employeeId||'—')}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;padding:8px 0;">
+                    <span style="font-size:12px;color:var(--muted);">Designation</span>
+                    <span style="font-size:13px;">${esc(data.designation||'—')}</span>
+                </div>
+            </div>`;
+
+        if (data.hasSignature) {
+            document.getElementById('sigStatus').textContent = '✓ Signature uploaded — will appear on hall tickets';
+            document.getElementById('sigStatus').className = 'sig-status ok';
+            document.getElementById('sigExistingWrap').style.display = 'block';
+            document.getElementById('sigUploadWrap').style.display   = 'none';
+            // Build the signature URL — signatureUrl comes from backend as /photos/view/filename
+            controllerSigUrl = data.signatureUrl ? `${API}${data.signatureUrl}` : null;
+            // Update the preview images
+            if (controllerSigUrl) {
+                const preview = document.getElementById('sigCurrentPreview');
+                if (preview) preview.src = controllerSigUrl;
+                // Also update the hall ticket preview box
+                const sigBox = document.getElementById('sigBoxPreview');
+                if (sigBox) sigBox.innerHTML = `<img src="${controllerSigUrl}" style="max-height:40px;max-width:120px;object-fit:contain;background:transparent;" alt="Signature">`;
+            }
+        }
+    } catch {}
+}
+
+// Signature file preview
+let cropperInstance = null;
+let croppedBlob = null;
+
+document.getElementById('sigFile')?.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = e => {
+        // Open crop modal
+        openCropModal(e.target.result);
+    };
+    r.readAsDataURL(file);
+});
+
+// Photo file preview
+document.getElementById('photoFile')?.addEventListener('change', function() {
+    const file = this.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = e => {
+        const prev = document.getElementById('photoPreview');
+        prev.src = e.target.result; prev.classList.add('show');
+        document.getElementById('photoPlaceholder').style.display='none';
+        document.getElementById('photoHint').textContent='✓ ' + file.name;
+        document.getElementById('photoHint').style.color='var(--success)';
+    };
+    r.readAsDataURL(file);
+});
+
+// ── Custom Canvas Cropper ─────────────────────────────────────
+const CROP = {
+    img: null, scale: 1, minScale: 1,
+    offsetX: 0, offsetY: 0,
+    dragging: false, lastX: 0, lastY: 0,
+    canvasW: 0, canvasH: 0, cropSize: 0,
+    cropW: 0, cropH: 0,
+    animFrame: null
+};
+
+function openCropModal(src) {
+    document.getElementById('cropModal').style.display = 'flex';
+    const img = new Image();
+    img.onload = () => {
+        CROP.img = img;
+        // small delay to let modal render
+        setTimeout(initCropCanvas, 50);
+    };
+    img.src = src;
+}
+
+function initCropCanvas() {
+    const canvas  = document.getElementById('cropCanvas');
+    const overlay = document.getElementById('cropOverlay');
+    const w = canvas.parentElement.offsetWidth || 420;
+    const h = Math.round(w * 0.82);
+    canvas.width  = w; canvas.height = h;
+    overlay.width = w; overlay.height = h;
+    CROP.canvasW = w; CROP.canvasH = h;
+    // Signature is landscape — use wide rectangle (3:1 aspect)
+    CROP.cropW = Math.round(w * 0.88);
+    CROP.cropH = Math.round(CROP.cropW / 3);
+    CROP.cropSize = CROP.cropW; // keep for compat, use cropW/cropH below
+
+    // Use 'contain' scale — fit entire image inside crop frame
+    // User can zoom in if they want to crop tighter
+    const minScaleX = CROP.cropW / CROP.img.width;
+    const minScaleY = CROP.cropH / CROP.img.height;
+    // Start at contain scale (show full image), min is cover scale (fill frame)
+    const coverScale   = Math.max(minScaleX, minScaleY);
+    const containScale = Math.min(minScaleX, minScaleY);
+    CROP.minScale = coverScale;       // can't zoom out past cover
+    CROP.scale    = containScale;     // start at contain so full sig is visible
+    CROP.scale    = CROP.minScale;
+
+    // Canvas height: crop frame height + comfortable margin (50% padding)
+    const canvasH = Math.round(CROP.cropH * 2.2);
+    canvas.height = canvasH; overlay.height = canvasH;
+    CROP.canvasH = canvasH;
+    CROP.offsetX = (w - CROP.img.width  * CROP.scale) / 2;
+    CROP.offsetY = (canvasH - CROP.img.height * CROP.scale) / 2;
+
+    const sl = document.getElementById('zoomSlider');
+    sl.min = CROP.minScale; sl.max = CROP.minScale * 5;
+    sl.step = CROP.minScale * 0.02; sl.value = CROP.scale;
+    // Show zoom % relative to cover scale
+    const initPct = Math.round((CROP.scale / CROP.minScale) * 100);
+    document.getElementById('zoomLabel').textContent = initPct + '%';
+
+    clampOffset();
+    renderCrop();
+}
+
+function clampOffset() {
+    const cw = CROP.cropW || CROP.cropSize;
+    const ch = CROP.cropH || CROP.cropSize;
+    const iw = CROP.img.width  * CROP.scale;
+    const ih = CROP.img.height * CROP.scale;
+    const cropX = (CROP.canvasW - cw) / 2;
+    const cropY = (CROP.canvasH - ch) / 2;
+    // Only clamp if image is LARGER than crop frame (cover mode)
+    // If image is smaller (contain mode), center it freely
+    if (iw >= cw) {
+        if (CROP.offsetX > cropX)           CROP.offsetX = cropX;
+        if (CROP.offsetX + iw < cropX + cw) CROP.offsetX = cropX + cw - iw;
+    } else {
+        // Center horizontally
+        CROP.offsetX = (CROP.canvasW - iw) / 2;
+    }
+    if (ih >= ch) {
+        if (CROP.offsetY > cropY)           CROP.offsetY = cropY;
+        if (CROP.offsetY + ih < cropY + ch) CROP.offsetY = cropY + ch - ih;
+    } else {
+        // Center vertically
+        CROP.offsetY = (CROP.canvasH - ih) / 2;
+    }
+}
+
+function renderCrop() {
+    if (CROP.animFrame) cancelAnimationFrame(CROP.animFrame);
+    CROP.animFrame = requestAnimationFrame(() => {
+        const canvas  = document.getElementById('cropCanvas');
+        const overlay = document.getElementById('cropOverlay');
+        if (!canvas || !overlay || !CROP.img) return;
+        const ctx  = canvas.getContext('2d');
+        const octx = overlay.getContext('2d');
+        const W = CROP.canvasW, H = CROP.canvasH;
+        const cw = CROP.cropW || CROP.cropSize;
+        const ch = CROP.cropH || CROP.cropSize;
+        const cx = (W - cw) / 2, cy = (H - ch) / 2;
+
+        // Draw image on main canvas
+        ctx.fillStyle = '#0f172a';
+        ctx.fillRect(0, 0, W, H);
+        ctx.drawImage(CROP.img, CROP.offsetX, CROP.offsetY,
+                      CROP.img.width * CROP.scale, CROP.img.height * CROP.scale);
+
+        // Overlay: dark outside crop rectangle
+        octx.clearRect(0, 0, W, H);
+        octx.fillStyle = 'rgba(0,0,0,0.62)';
+        octx.fillRect(0, 0, W, H);
+        octx.clearRect(cx, cy, cw, ch);
+
+        // Crop border
+        octx.strokeStyle = '#7c3aed';
+        octx.lineWidth = 2;
+        octx.strokeRect(cx, cy, cw, ch);
+
+        // Corner handles
+        const hl = 12;
+        octx.strokeStyle = '#a78bfa';
+        octx.lineWidth = 3;
+        [[cx,cy],[cx+cw,cy],[cx,cy+ch],[cx+cw,cy+ch]].forEach(([x,y]) => {
+            const dx = x===cx ? 1 : -1, dy = y===cy ? 1 : -1;
+            octx.beginPath();
+            octx.moveTo(x + dx*hl, y); octx.lineTo(x, y); octx.lineTo(x, y + dy*hl);
+            octx.stroke();
+        });
+
+        // Grid lines (3x1)
+        octx.strokeStyle = 'rgba(255,255,255,0.13)';
+        octx.lineWidth = 0.5;
+        [1,2].forEach(i => {
+            octx.beginPath(); octx.moveTo(cx + cw/3*i, cy); octx.lineTo(cx + cw/3*i, cy+ch); octx.stroke();
+        });
+
+        // Live preview — landscape rectangle
+        const prev = document.getElementById('cropPreviewCanvas');
+        if (prev) {
+            const PW = 200, PH = Math.round(PW / 3);
+            prev.width = PW; prev.height = PH;
+            const pctx = prev.getContext('2d');
+            pctx.fillStyle = '#fff';
+            pctx.fillRect(0, 0, PW, PH);
+            pctx.drawImage(canvas, cx, cy, cw, ch, 0, 0, PW, PH);
+        }
+        const info = document.getElementById('cropSizeInfo');
+        if (info) info.textContent = cw + '×' + ch + 'px → 600×200 output';
+    });
+}
+
+// ── Drag ─────────────────────────────────────────────────────
+function cropDragStart(e) {
+    CROP.dragging = true;
+    CROP.lastX = e.clientX; CROP.lastY = e.clientY;
+    e.currentTarget.style.cursor = 'grabbing';
+}
+function cropDragMove(e) {
+    if (!CROP.dragging || !CROP.img) return;
+    CROP.offsetX += e.clientX - CROP.lastX;
+    CROP.offsetY += e.clientY - CROP.lastY;
+    CROP.lastX = e.clientX; CROP.lastY = e.clientY;
+    clampOffset(); renderCrop();
+}
+function cropDragEnd(e) {
+    CROP.dragging = false;
+    if (e && e.currentTarget) e.currentTarget.style.cursor = 'grab';
+}
+
+// ── Zoom ─────────────────────────────────────────────────────
+function cropZoomSlider(val) {
+    const ns = parseFloat(val);
+    const W = CROP.canvasW, H = CROP.canvasH;
+    const cx = W/2, cy = H/2;
+    const ratio = ns / CROP.scale;
+    CROP.offsetX = cx - ratio*(cx - CROP.offsetX);
+    CROP.offsetY = cy - ratio*(cy - CROP.offsetY);
+    CROP.scale = ns;
+    document.getElementById('zoomLabel').textContent =
+        Math.round((ns/CROP.minScale)*100) + '%';
+    clampOffset(); renderCrop();
+}
+function cropZoom(delta) {
+    const sl = document.getElementById('zoomSlider');
+    const ns = Math.min(Math.max(CROP.scale + delta*CROP.minScale,
+                                  CROP.minScale), CROP.minScale*5);
+    sl.value = ns;
+    cropZoomSlider(ns);
+}
+function cropWheel(e) {
+    e.preventDefault();
+    cropZoom(e.deltaY < 0 ? 0.06 : -0.06);
+}
+
+// ── Reset ────────────────────────────────────────────────────
+function resetCrop() {
+    if (!CROP.img) return;
+    CROP.scale = CROP.minScale;
+    CROP.offsetX = (CROP.canvasW - CROP.img.width * CROP.scale) / 2;
+    CROP.offsetY = (CROP.canvasH - CROP.img.height * CROP.scale) / 2;
+    document.getElementById('zoomSlider').value = CROP.scale;
+    document.getElementById('zoomLabel').textContent = '100%';
+    clampOffset(); renderCrop();
+}
+
+// ── Close ────────────────────────────────────────────────────
+function closeCropModal() {
+    document.getElementById('cropModal').style.display = 'none';
+    if (!croppedBlob) document.getElementById('sigFile').value = '';
+}
+
+// ── Apply ────────────────────────────────────────────────────
+function applyCrop() {
+    if (!CROP.img) return;
+    const W = CROP.canvasW, H = CROP.canvasH;
+    const cw = CROP.cropW || CROP.cropSize;
+    const ch = CROP.cropH || CROP.cropSize;
+    const cx = (W - cw) / 2, cy = (H - ch) / 2;
+    const mainCanvas = document.getElementById('cropCanvas');
+    const scaleX = mainCanvas.width  / mainCanvas.offsetWidth;
+    const scaleY = mainCanvas.height / mainCanvas.offsetHeight;
+
+    // Extract crop area at full canvas resolution
+    const raw = document.createElement('canvas');
+    raw.width  = Math.round(cw * scaleX);
+    raw.height = Math.round(ch * scaleY);
+    const rctx = raw.getContext('2d');
+    rctx.fillStyle = '#fff';
+    rctx.fillRect(0, 0, raw.width, raw.height);
+    rctx.drawImage(mainCanvas,
+        Math.round(cx * scaleX), Math.round(cy * scaleY),
+        raw.width, raw.height,
+        0, 0, raw.width, raw.height);
+
+    // Output at 600x200
+    const out = document.createElement('canvas');
+    out.width = 600; out.height = 200;
+    const octx = out.getContext('2d');
+    octx.fillStyle = '#fff';
+    octx.fillRect(0, 0, 600, 200);
+    octx.drawImage(raw, 0, 0, raw.width, raw.height, 0, 0, 600, 200);
+
+    out.toBlob(blob => {
+        croppedBlob = blob;
+        const url = out.toDataURL('image/png');
+        const prev = document.getElementById('sigPreview');
+        prev.src = url; prev.classList.add('show');
+        document.getElementById('sigPlaceholder').style.display = 'none';
+        document.getElementById('sigHint').textContent = '✓ Cropped — ready to upload';
+        document.getElementById('sigHint').style.color = 'var(--success)';
+        const box = document.getElementById('sigBoxPreview');
+        if (box) box.innerHTML = '<img src="'+url+'" style="max-height:34px;max-width:100px;object-fit:contain;">';
+        document.getElementById('cropModal').style.display = 'none';
+    }, 'image/png', 0.95);
+}
+
+function showChangeSig() {
+    document.getElementById('sigExistingWrap').style.display = 'none';
+    document.getElementById('sigUploadWrap').style.display   = 'block';
+    document.getElementById('cancelSigBtn').style.display    = 'inline-flex';
+}
+
+function cancelChangeSig() {
+    document.getElementById('sigExistingWrap').style.display = 'block';
+    document.getElementById('sigUploadWrap').style.display   = 'none';
+    document.getElementById('cancelSigBtn').style.display    = 'none';
+    // Reset file input
+    const sigFile = document.getElementById('sigFile');
+    if (sigFile) sigFile.value = '';
+    document.getElementById('sigPreview').src = '';
+    document.getElementById('sigPreview').classList.remove('show');
+    document.getElementById('sigPlaceholder').style.display = '';
+    document.getElementById('sigHint').textContent = 'Upload a clear scan of your signature on white paper';
+    document.getElementById('sigHint').style.color = '';
+}
+
+async function uploadSignature() {
+    // Try to get controllerId if missing
+    if (!controllerId && currentUser.controllerId) controllerId = currentUser.controllerId;
+    if (!controllerId) {
+        // Last resort: fetch from API
+        try {
+            const r = await fetch(`${API}/exam-controller/me?email=${encodeURIComponent(currentUser.email||currentUser.username)}`);
+            const d = await r.json();
+            controllerId = d.controllerId;
+        } catch {}
+    }
+    if (!controllerId) { alert('Controller ID not found. Please reload.'); return; }
+    const btn = document.getElementById('uploadSigBtn');
+    btn.disabled=true; btn.classList.add('loading');
+    try {
+        // Use cropped blob if available, otherwise raw file
+        let uploadFile = croppedBlob
+            ? new File([croppedBlob], 'signature.png', { type: 'image/png' })
+            : document.getElementById('sigFile')?.files[0];
+        if (!uploadFile) { document.getElementById('sigHint').textContent='Please select and crop a signature image first.'; document.getElementById('sigHint').style.color='var(--danger)'; btn.disabled=false; btn.classList.remove('loading'); return; }
+        const fd = new FormData(); fd.append('signature', uploadFile);
+        const res  = await fetch(`${API}/exam-controller/${controllerId}/upload-signature`, { method:'POST', body:fd });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('sigStatus').textContent = '✓ Signature uploaded — will appear on hall tickets';
+            document.getElementById('sigStatus').className = 'sig-status ok';
+            // Show existing preview, hide upload form
+            const prev = document.getElementById('sigPreview');
+            if (prev && prev.src) document.getElementById('sigCurrentPreview').src = prev.src;
+            document.getElementById('sigExistingWrap').style.display = 'block';
+            document.getElementById('sigUploadWrap').style.display   = 'none';
+            document.getElementById('cancelSigBtn').style.display    = 'none';
+            croppedBlob = null;
+            // Update sig URL for PDF export using the returned path filename
+            if (data.signaturePath) {
+                const fname = data.signaturePath.replace(/\\/g,'/').split('/').pop();
+                controllerSigUrl = `${API}/photos/view/${fname}`;
+                // Update hall ticket preview box
+                const sigBox = document.getElementById('sigBoxPreview');
+                if (sigBox) sigBox.innerHTML = `<img src="${controllerSigUrl}" style="max-height:40px;max-width:120px;object-fit:contain;background:transparent;" alt="Signature">`;
+            }
+        } else { alert(data.error || 'Upload failed.'); }
+    } catch(e) { alert('Error: ' + e.message); }
+    finally { btn.disabled=false; btn.classList.remove('loading'); }
+}
+
+async function uploadPhoto() {
+    if (!controllerId) return;
+    const file = document.getElementById('photoFile')?.files[0];
+    if (!file) return;
+    const fd = new FormData(); fd.append('photo', file);
+    try {
+        await fetch(`${API}/exam-controller/${controllerId}/upload-photo`, { method:'POST', body:fd });
+        document.getElementById('photoHint').textContent = '✓ Photo uploaded';
+        document.getElementById('photoHint').style.color = 'var(--success)';
+    } catch {}
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function showAlert(id, msg, type) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = msg; el.className = 'alert show ' + type;
+    setTimeout(() => el.classList.remove('show'), 7000);
+}
+function esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        // ── Settings panel ─────────────────────────────────────
+
+   async function loadSettings() {
+    if (!controllerId && currentUser.controllerId) controllerId = currentUser.controllerId;
+    if (!controllerId) {
+        try {
+            const r = await fetch(`${API}/exam-controller/me?email=${encodeURIComponent(currentUser.email||currentUser.username)}`);
+            const d = await r.json(); controllerId = d.controllerId;
+        } catch {}
+    }
+    if (!controllerId) { showAlert('settingsAlert','Could not load profile. Please re-login.','error'); return; }
+    document.getElementById('settingsNameLabel') && (document.getElementById('settingsNameLabel').textContent = 'Loading…');
+    try {
+        const res = await fetch(`${API}/profile/exam-controller/${controllerId}`);
+        if (!res.ok) return;
+        const d = await res.json();
+        // Pre-fill editable fields
+        const sName = document.getElementById('sName');
+        const sPhone = document.getElementById('sPhone');
+        const sDob = document.getElementById('sDob');
+        const sDesignation = document.getElementById('sDesignation');
+        if (sName) sName.value = d.name || '';
+        if (sPhone) sPhone.value = d.phone || '';
+        if (sDob) sDob.value = d.dateOfBirth || '';
+        if (sDesignation) sDesignation.value = d.designation || '';
+        // Read-only fields
+        const sEmail = document.getElementById('sEmail');
+        const sEmpId = document.getElementById('sEmpId');
+        if (sEmail) sEmail.value = d.email || '';
+        if (sEmpId) sEmpId.value = d.employeeId || '';
+        // Role label
+        const roleLabel = document.getElementById('settingsRoleLabel');
+        if (roleLabel) roleLabel.textContent = d.designation || 'Controller of Examinations';
+        // Sidebar name
+        const ecNameEl = document.getElementById('ecName');
+        if (ecNameEl && d.name) ecNameEl.textContent = d.name;
+        // Photo
+        if (d.photoUrl) {
+            document.getElementById('settingsAvatarWrap').innerHTML =
+                `<img src="${API}${esc(d.photoUrl)}" style="width:100%;height:100%;object-fit:cover;">`;
+        }
+        // Alert clear
+        showAlert('settingsAlert','','');
+    } catch(e) { showAlert('settingsAlert','Failed to load profile: '+e.message,'error'); }
+}
+
+async function uploadSettingsPhoto() {
+            if (!controllerId) return;
+            const file = document.getElementById('settingsPhotoFile')?.files[0];
+            if (!file) { showAlert('settingsAlert','Please select a photo first.','warn'); return; }
+            const fd = new FormData(); fd.append('photo', file);
+            try {
+                const res = await fetch(`${API}/profile/exam-controller/${controllerId}/photo`, { method:'POST', body:fd });
+                const d   = await res.json();
+                if (d.success) showAlert('settingsAlert','✓ Photo uploaded!','success');
+                else showAlert('settingsAlert', d.error||'Failed','error');
+            } catch(e) { showAlert('settingsAlert','Error: '+e.message,'error'); }
+        }
+
+        async function saveSettings() {
+            if (!controllerId) return;
+            const body = {
+                name:        document.getElementById('sName')?.value.trim(),
+                designation: document.getElementById('sDesignation')?.value.trim(),
+                phone:       document.getElementById('sPhone')?.value.trim(),
+                dateOfBirth: document.getElementById('sDob')?.value,
+            };
+            const btn = document.getElementById('saveSettingsBtn');
+            btn.disabled=true; btn.classList.add('loading');
+            try {
+                const res = await fetch(`${API}/profile/exam-controller/${controllerId}`, {
+                    method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)
+                });
+                const d = await res.json();
+                if (d.success) {
+                    showAlert('settingsAlert','✓ Profile updated successfully!','success');
+                    document.getElementById('ecName').textContent = body.name || document.getElementById('ecName').textContent;
+                    const nameLabel = document.getElementById('settingsNameLabel');
+                    if (nameLabel) nameLabel.textContent = body.name || '—';
+                    const roleLabel = document.getElementById('settingsRoleLabel');
+                    if (roleLabel) roleLabel.textContent = body.designation || 'Controller of Examinations';
+                    currentUser.name = body.name;
+                    sessionStorage.setItem('user', JSON.stringify(currentUser));
+                } else showAlert('settingsAlert', d.error||'Update failed','error');
+            } catch(e) { showAlert('settingsAlert','Error: '+e.message,'error'); }
+            finally { btn.disabled=false; btn.classList.remove('loading'); }
+        }
+
+function logout() { sessionStorage.clear(); window.location.href='index.html'; }
+</script>
+</body>
+</html>

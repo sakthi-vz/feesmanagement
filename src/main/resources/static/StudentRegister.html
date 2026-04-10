@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration — CEMS</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --ink:         #0d0d0d;
+            --muted:       #6b6b6b;
+            --muted-light: #9a9a9a;
+            --line:        #e4e4e4;
+            --bg:          #f7f5f2;
+            --white:       #ffffff;
+            --accent:      #2f52e0;
+            --accent-dark: #1a38b0;
+            --accent-bg:   #eef1fc;
+            --success:     #16a34a;
+            --danger:      #dc2626;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 520px;
+        }
+
+        /* LEFT */
+        .left {
+            padding: 56px 72px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid var(--line);
+            min-height: 100vh;
+            position: sticky; top: 0; height: 100vh; overflow: hidden;
+        }
+        .wordmark {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 13px; font-weight: 500; letter-spacing: 0.08em;
+            text-transform: uppercase; color: var(--muted);
+        }
+        .wordmark-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+        .headline { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 60px 0 40px; }
+        .accent-bar { width: 40px; height: 3px; background: var(--accent); border-radius: 2px; margin-bottom: 28px; }
+        .headline h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(38px, 4vw, 58px); font-weight: 400;
+            line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); margin-bottom: 22px;
+        }
+        .headline h1 em { font-style: italic; color: var(--accent); }
+        .headline p { font-size: 15px; color: var(--muted); line-height: 1.75; max-width: 400px; font-weight: 300; }
+        .steps { margin-top: 48px; display: flex; flex-direction: column; gap: 20px; }
+        .step { display: flex; align-items: flex-start; gap: 14px; }
+        .step-num {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--accent-bg); color: var(--accent);
+            font-size: 12px; font-weight: 500;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+        }
+        .step-text strong { display: block; font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 2px; }
+        .step-text span { font-size: 12px; color: var(--muted); font-weight: 300; }
+        .left-footer { font-size: 12px; color: var(--muted-light); }
+
+        /* RIGHT */
+        .right { background: var(--white); min-height: 100vh; padding: 56px 52px; overflow-y: auto; }
+        .back-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 12px; font-weight: 500; color: var(--muted); text-decoration: none;
+            letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 40px; transition: color 0.2s;
+        }
+        .back-link:hover { color: var(--accent); }
+        .back-link:hover svg { transform: translateX(-2px); }
+        .back-link svg { transition: transform 0.2s; }
+        .panel-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+        .panel-title { font-family: 'DM Serif Display', serif; font-size: 28px; font-weight: 400; color: var(--ink); margin-bottom: 6px; }
+        .panel-sub { font-size: 14px; color: var(--muted); margin-bottom: 32px; font-weight: 300; }
+
+        /* Message */
+        .msg { display: none; padding: 12px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 20px; }
+        .msg.show { display: block; }
+        .msg.error   { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+        .msg.success { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+
+        /* Section labels */
+        .section-label {
+            font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+            color: var(--muted); margin: 28px 0 18px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+        }
+        .section-label:first-of-type { margin-top: 0; }
+
+        /* Fields */
+        .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .field { margin-bottom: 18px; }
+        .field.span2 { grid-column: 1 / -1; }
+        .field label {
+            display: block; font-size: 11px; font-weight: 500; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 7px;
+        }
+        .field .req { color: var(--accent); margin-left: 2px; }
+        .field input, .field select {
+            width: 100%; padding: 12px 14px;
+            border: 1px solid var(--line); border-radius: 8px;
+            font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--ink);
+            background: var(--bg); transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+            outline: none; appearance: none; -webkit-appearance: none;
+        }
+        .field select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b6b6b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; cursor: pointer;
+        }
+        .field input:focus, .field select:focus {
+            border-color: var(--accent); box-shadow: 0 0 0 3px rgba(47,82,224,0.08); background: var(--white);
+        }
+        .field input::placeholder { color: #c0bdba; }
+        .field input.valid   { border-color: var(--success); }
+        .field input.invalid { border-color: var(--danger); }
+        .field-hint { font-size: 11px; color: var(--muted-light); margin-top: 5px; min-height: 16px; transition: color 0.2s; }
+        .field-hint.ok  { color: var(--success); }
+        .field-hint.bad { color: var(--danger); }
+
+        /* Password strength */
+        .strength-bar { display: flex; gap: 4px; margin-top: 7px; }
+        .strength-bar span { flex: 1; height: 3px; border-radius: 2px; background: var(--line); transition: background 0.3s; }
+        .strength-bar.s1 span:nth-child(1) { background: var(--danger); }
+        .strength-bar.s2 span:nth-child(-n+2) { background: #f59e0b; }
+        .strength-bar.s3 span { background: var(--success); }
+
+        /* Submit */
+        .btn-submit {
+            width: 100%; padding: 14px; background: var(--accent); color: white;
+            border: none; border-radius: 8px; font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: background 0.2s, transform 0.15s; margin-top: 8px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-submit:hover:not(:disabled) { background: var(--accent-dark); transform: translateY(-1px); }
+        .btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+        .spinner-inline {
+            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.35);
+            border-top-color: white; border-radius: 50%;
+            animation: spin 0.7s linear infinite; display: none;
+        }
+        .btn-submit.loading .spinner-inline { display: block; }
+        /* ── Photo upload ── */
+        .photo-upload-box {
+            border: 2px dashed var(--line);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            background: var(--bg);
+            position: relative;
+        }
+        .photo-upload-box:hover { border-color: var(--accent); background: #f0f4ff; }
+        .photo-upload-box input[type="file"] { display: none; }
+        .photo-preview {
+            width: 100px; height: 120px;
+            border-radius: 8px; object-fit: cover;
+            border: 2px solid var(--accent);
+            display: none; margin: 0 auto 8px;
+        }
+        .photo-preview.visible { display: block; }
+        .photo-upload-icon { font-size: 32px; margin-bottom: 8px; }
+        .photo-upload-text { font-size: 13px; color: var(--muted); }
+        .photo-upload-hint { font-size: 11px; color: var(--muted-light); margin-top: 4px; }
+
+        .btn-submit.loading .btn-text { opacity: 0.7; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Footer */
+        .signin-strip {
+            margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--line);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .signin-strip span { font-size: 13px; color: var(--muted); }
+        .signin-strip a {
+            font-size: 13px; font-weight: 500; color: var(--accent); text-decoration: none;
+            padding: 7px 14px; border: 1px solid #d0d9f8; border-radius: 6px; transition: all 0.2s;
+        }
+        .signin-strip a:hover { background: var(--accent); color: white; border-color: var(--accent); }
+
+        @media (max-width: 900px) {
+            body { grid-template-columns: 1fr; }
+            .left { display: none; }
+            .right { padding: 40px 28px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="left">
+        <div class="wordmark">
+            <div class="wordmark-dot"></div>
+            CEMS — College Exam Management
+        </div>
+        <div class="headline">
+            <div class="accent-bar"></div>
+            <h1>Your academic<br>journey starts <em>here.</em></h1>
+            <p>Create your student account to access exam registrations, fee payments, and your complete academic record — all in one place.</p>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div class="step-text">
+                        <strong>Create your account</strong>
+                        <span>Fill in your details and set a secure password</span>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div class="step-text">
+                        <strong>HOD allocates subjects</strong>
+                        <span>Your department head assigns your semester subjects</span>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div class="step-text">
+                        <strong>Pay &amp; download receipt</strong>
+                        <span>Pay exam fees and get a PDF receipt instantly</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="left-footer">&copy; 2025 CEMS — All rights reserved</div>
+    </div>
+
+    <div class="right">
+        <a href="index.html" class="back-link">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            Back to sign in
+        </a>
+
+        <p class="panel-label">New student</p>
+        <h1 class="panel-title">Create your account</h1>
+        <p class="panel-sub">All fields marked <span style="color:var(--accent)">*</span> are required</p>
+
+        <div class="msg" id="message"></div>
+
+        <form id="registerForm" novalidate>
+            <div class="section-label">Personal information</div>
+            <div class="field-row">
+                <div class="field span2">
+                    <label>Roll Number <span class="req">*</span></label>
+                    <input type="text" id="rollNo" name="rollNo" placeholder="e.g. CSE2024001" autocomplete="username" required>
+                    <div class="field-hint">Used as your login username — uppercase only</div>
+                </div>
+                <div class="field span2">
+                    <label>Full Name <span class="req">*</span></label>
+                    <input type="text" id="name" name="name" placeholder="As on official records" required>
+                </div>
+                <div class="field">
+                    <label>Email Address <span class="req">*</span></label>
+                    <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+                </div>
+                <div class="field">
+                    <label>Phone Number <span class="req">*</span></label>
+                    <input type="tel" id="phone" name="phone" placeholder="10-digit mobile" maxlength="10" required>
+                </div>
+                <div class="field">
+                    <label>Date of Birth <span class="req">*</span></label>
+                    <input type="date" id="dateOfBirth" name="dateOfBirth" required max="2010-12-31">
+                    <div class="field-hint">As per official records</div>
+                </div>
+            </div>
+
+            <div class="section-label">Academic details</div>
+            <div class="field">
+                <label>Department <span class="req">*</span></label>
+                <select id="deptId" name="deptId" required>
+                    <option value="">Loading departments…</option>
+                </select>
+                <div class="field-hint">You will be enrolled in Semester 1 by default</div>
+            </div>
+
+
+            <div class="section-label">Profile Photo</div>
+            <div class="field">
+                <label>Photo <span class="req">*</span></label>
+                <div class="photo-upload-box" id="photoBox" onclick="document.getElementById('photoInput').click()">
+                    <img id="photoPreview" class="photo-preview" src="" alt="Preview">
+                    <div id="photoPlaceholder">
+                        <div class="photo-upload-icon">📷</div>
+                        <div class="photo-upload-text">Click to upload your photo</div>
+                        <div class="photo-upload-hint">JPG, PNG, WEBP • Max 2 MB • Passport size preferred</div>
+                    </div>
+                    <input type="file" id="photoInput" name="photo" accept="image/jpeg,image/png,image/webp">
+                </div>
+                <div class="field-hint" id="photoHint">Upload a clear passport-size photo</div>
+            </div>
+            <div class="section-label">Security</div>
+            <div class="field-row">
+                <div class="field">
+                    <label>Password <span class="req">*</span></label>
+                    <input type="password" id="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" minlength="8" required>
+                    <div class="strength-bar" id="strengthBar"><span></span><span></span><span></span></div>
+                    <div class="field-hint" id="passwordHint">At least 8 characters</div>
+                </div>
+                <div class="field">
+                    <label>Confirm Password <span class="req">*</span></label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Re-enter password" autocomplete="new-password" minlength="8" required>
+                    <div class="field-hint" id="confirmHint"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-submit" id="submitBtn">
+                <div class="spinner-inline"></div>
+                <span class="btn-text">Create student account</span>
+            </button>
+        </form>
+
+        <div class="signin-strip">
+            <span>Already have an account?</span>
+            <a href="index.html">Sign in</a>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:8080';
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            async function loadDepartments() {
+                try {
+                    const res   = await fetch(`${API_BASE_URL}/departments/all`);
+                    const depts = await res.json();
+                    const sel   = document.getElementById('deptId');
+                    sel.innerHTML = '<option value="">Select your department</option>' +
+                        depts.map(d => `<option value="${d.deptId}">${d.deptName.replace(/</g,'&lt;')}</option>`).join('');
+                } catch {
+                    document.getElementById('deptId').innerHTML = '<option value="">Unable to load — please refresh</option>';
+                }
+            }
+            loadDepartments();
+
+            document.getElementById('rollNo').addEventListener('input', function () {
+                this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+            });
+
+            document.getElementById('password').addEventListener('input', function () {
+                const v = this.value, bar = document.getElementById('strengthBar'), hint = document.getElementById('passwordHint');
+                bar.className = 'strength-bar';
+                if (!v)        { hint.textContent = 'At least 8 characters'; hint.className = 'field-hint'; }
+                else if (v.length < 8)  { bar.classList.add('s1'); hint.textContent = 'Too short'; hint.className = 'field-hint bad'; }
+                else if (v.length < 12) { bar.classList.add('s2'); hint.textContent = 'Good — consider a longer password'; hint.className = 'field-hint'; }
+                else                    { bar.classList.add('s3'); hint.textContent = 'Strong password'; hint.className = 'field-hint ok'; }
+                const cv = document.getElementById('confirmPassword').value;
+                if (cv.length > 0) checkConfirm(cv, v);
+            });
+
+            function checkConfirm(cv, pv) {
+                const hint = document.getElementById('confirmHint'), inp = document.getElementById('confirmPassword');
+                if (!cv)         { hint.textContent = ''; hint.className = 'field-hint'; inp.classList.remove('valid','invalid'); }
+                else if (cv===pv){ hint.textContent = '✓ Passwords match';     hint.className='field-hint ok';  inp.classList.add('valid');   inp.classList.remove('invalid'); }
+                else             { hint.textContent = '✗ Passwords do not match'; hint.className='field-hint bad'; inp.classList.add('invalid'); inp.classList.remove('valid'); }
+            }
+            document.getElementById('confirmPassword').addEventListener('input', function () {
+                checkConfirm(this.value, document.getElementById('password').value);
+            });
+
+            // Photo preview
+            document.getElementById('photoInput').addEventListener('change', function() {
+                const file = this.files[0];
+                if (!file) return;
+                if (!['image/jpeg','image/jpg','image/png','image/webp'].includes(file.type)) {
+                    document.getElementById('photoHint').textContent = '✗ Only JPG, PNG, WEBP allowed';
+                    document.getElementById('photoHint').style.color = '#dc2626';
+                    this.value = ''; return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                    document.getElementById('photoHint').textContent = '✗ File must be under 2 MB';
+                    document.getElementById('photoHint').style.color = '#dc2626';
+                    this.value = ''; return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const preview = document.getElementById('photoPreview');
+                    preview.src = e.target.result;
+                    preview.classList.add('visible');
+                    document.getElementById('photoPlaceholder').style.display = 'none';
+                    document.getElementById('photoHint').textContent = '✓ Photo selected — ' + file.name;
+                    document.getElementById('photoHint').style.color = '#15803d';
+                };
+                reader.readAsDataURL(file);
+            });
+
+
+            document.getElementById('registerForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const rollNo = document.getElementById('rollNo').value.trim();
+                const name   = document.getElementById('name').value.trim();
+                const email  = document.getElementById('email').value.trim();
+                const phone  = document.getElementById('phone').value.trim();
+                const dob    = document.getElementById('dateOfBirth').value.trim();
+                const deptId = document.getElementById('deptId').value;
+                const pw     = document.getElementById('password').value;
+                const cpw    = document.getElementById('confirmPassword').value;
+
+                const photoFile = document.getElementById('photoInput').files[0];
+                if (!rollNo||!name||!email||!phone||!dob||!deptId||!pw) { showMsg('Please fill in all required fields.','error'); return; }
+                if (!photoFile) { showMsg('Please upload your photo.','error'); return; }
+                if (pw.length < 8)    { showMsg('Password must be at least 8 characters.','error'); return; }
+                if (pw !== cpw)       { showMsg('Passwords do not match.','error'); return; }
+                if (!/^\d{10}$/.test(phone)) { showMsg('Phone must be exactly 10 digits.','error'); return; }
+
+                const btn = document.getElementById('submitBtn');
+                btn.disabled = true; btn.classList.add('loading'); hideMsg();
+
+                try {
+                    const res  = await fetch(`${API_BASE_URL}/auth/register/student`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ rollNo, name, email, phone, dateOfBirth: dob, deptId, password: pw })
+                    });
+                    const data = await res.json();
+                    if (res.status === 201) {
+                        // Upload photo using the studentId returned
+                        if (photoFile && data.studentId) {
+                            const fd = new FormData();
+                            fd.append('photo', photoFile);
+                            try { await fetch(`${API_BASE_URL}/photos/upload/student/${data.studentId}`, { method: 'POST', body: fd }); }
+                            catch { /* photo upload failed silently — not critical */ }
+                        }
+                        showMsg('Account created! Redirecting to sign in…', 'success');
+                        e.target.reset();
+                        document.getElementById('strengthBar').className = 'strength-bar';
+                        document.getElementById('photoPreview').classList.remove('visible');
+                        document.getElementById('photoPlaceholder').style.display = '';
+                        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+                    } else {
+                        showMsg(data.error || 'Registration failed. Please try again.', 'error');
+                    }
+                } catch { showMsg('Cannot connect to server. Please try again later.','error'); }
+                finally { btn.disabled=false; btn.classList.remove('loading'); }
+            });
+        });
+
+        function showMsg(t,type){ const el=document.getElementById('message'); el.textContent=t; el.className=`msg show ${type}`; el.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+        function hideMsg(){ document.getElementById('message').className='msg'; }
+    </script>
+</body>
+</html>
