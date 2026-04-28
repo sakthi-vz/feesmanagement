@@ -218,11 +218,18 @@ public class StudentService {
                 graduated++;
             } else {
                 s.setCurrentSemester(currentSemester + 1);
-                // Warning 1 fix — explicitly reset attendance AND eligibility for new semester
-                // setAttendancePercentage triggers updateEligibilityStatus() which sets NOT_ELIGIBLE
+                // Reset attendance and eligibility for new semester
                 s.setAttendancePercentage(0.0);
                 s.setEligibilityStatus(Student.EligibilityStatus.NOT_ELIGIBLE);
                 createOrGetStatus(s, currentSemester + 1);
+                // Clean up ALL unpaid SEMESTER registrations at promotion time.
+                // This wipes the old allocation entirely — including HOD-added extra subjects
+                // from the completed semester that may have a future subject.semester value
+                // (e.g. a Sem 3 subject added as extra during Sem 2 allocation would survive
+                // the old deleteStale query since 3 == newSem 3). A full wipe is safe because:
+                //   • paid registrations are preserved (payment IS NOT NULL rows kept)
+                //   • the new HOD will re-allocate subjects fresh for the new semester
+                registrationRepository.deleteAllUnpaidSemesterRegistrations(s.getStudentId());
                 promoted++;
             }
         }

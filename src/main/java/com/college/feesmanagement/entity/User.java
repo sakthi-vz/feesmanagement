@@ -27,7 +27,7 @@ public class User {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "VARCHAR(20)")
     private Role role;
 
     @Email(message = "Invalid email format")
@@ -52,8 +52,12 @@ public class User {
     @JsonIgnore
     private ExamControllerAdmin examController;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private com.college.feesmanagement.entity.Principal principal;
+
     public enum Role {
-        STUDENT, HOD, ADMIN, EXAM_CONTROLLER
+        STUDENT, HOD, ADMIN, EXAM_CONTROLLER, PRINCIPAL
     }
 
     public User() {}
@@ -87,4 +91,6 @@ public class User {
     public void setAdmin(Admin admin) { this.admin = admin; if (admin != null) admin.setUser(this); }
     public ExamControllerAdmin getExamController() { return examController; }
     public void setExamController(ExamControllerAdmin ec) { this.examController = ec; if (ec != null) ec.setUser(this); }
+    public com.college.feesmanagement.entity.Principal getPrincipal() { return principal; }
+    public void setPrincipal(com.college.feesmanagement.entity.Principal p) { this.principal = p; if (p != null) p.setUser(this); }
 }

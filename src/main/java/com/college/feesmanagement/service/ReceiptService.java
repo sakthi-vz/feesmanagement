@@ -166,7 +166,13 @@ public class ReceiptService {
             // Right: Student details
             Cell rightCell = new Cell().setBorder(Border.NO_BORDER).setPaddingLeft(12);
             rightCell.add(sectionTitle("Student Details"));
-            rightCell.add(infoRow("Name",       payment.getStudent().getName()));
+            String fullStudentName = java.util.stream.Stream.of(
+                    payment.getStudent().getName(),
+                    payment.getStudent().getMiddleName(),
+                    payment.getStudent().getLastName())
+                .filter(n -> n != null && !n.isBlank())
+                .collect(java.util.stream.Collectors.joining(" "));
+            rightCell.add(infoRow("Name", fullStudentName));
             rightCell.add(infoRow("Roll No",    payment.getStudent().getRollNo()));
             rightCell.add(infoRow("Department", payment.getStudent().getDepartment() != null
                     ? payment.getStudent().getDepartment().getDeptName() : "N/A"));

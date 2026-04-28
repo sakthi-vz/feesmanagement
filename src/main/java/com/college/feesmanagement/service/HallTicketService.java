@@ -6,7 +6,9 @@ import com.itextpdf.io.image.ImageDataFactory;
 import com.itextpdf.kernel.colors.ColorConstants;
 import com.itextpdf.kernel.geom.PageSize;
 import com.itextpdf.kernel.pdf.PdfDocument;
+import com.itextpdf.kernel.pdf.PdfPage;
 import com.itextpdf.kernel.pdf.PdfWriter;
+import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.borders.Border;
 import com.itextpdf.layout.borders.SolidBorder;
@@ -19,10 +21,12 @@ import com.itextpdf.layout.properties.HorizontalAlignment;
 import com.itextpdf.layout.properties.TextAlignment;
 import com.itextpdf.layout.properties.UnitValue;
 import com.itextpdf.layout.properties.VerticalAlignment;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.file.Paths;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -35,17 +39,69 @@ public class HallTicketService {
     private final ExamRegistrationRepository registrationRepository;
     private final ExamFeePaymentRepository   paymentRepository;
     private final ExamControllerRepository   controllerRepository;
+    private final ExamScheduleRepository     scheduleRepository;
+    private final PrincipalRepository        principalRepository;
+
+    @Value("${upload.photos.dir:uploads/photos}")
+    private String uploadDir;
 
     private static final float B = 0.5f; // border width
 
     public HallTicketService(StudentRepository studentRepository,
                               ExamRegistrationRepository registrationRepository,
                               ExamFeePaymentRepository paymentRepository,
-                              ExamControllerRepository controllerRepository) {
+                              ExamControllerRepository controllerRepository,
+                              ExamScheduleRepository scheduleRepository,
+                              PrincipalRepository principalRepository) {
         this.studentRepository      = studentRepository;
         this.registrationRepository = registrationRepository;
         this.paymentRepository      = paymentRepository;
         this.controllerRepository   = controllerRepository;
+        this.scheduleRepository     = scheduleRepository;
+        this.principalRepository    = principalRepository;
+    }
+
+    /**
+     * Resolves a stored signature/photo path to an existing File.
+     * New uploads store absolute paths, so case 1 will always hit.
+     * Cases 2-5 are fallbacks for any paths saved before this fix.
+     *
+     * Resolution order:
+     *   1. As-is (works for absolute paths — all new uploads)
+     *   2. Relative to user.home  (old save location on most systems)
+     *   3. Relative to user.dir
+     *   4. Filename only inside uploadDir under user.home
+     *   5. Filename only inside uploadDir under user.dir
+     */
+    private File resolveFile(String storedPath) {
+        if (storedPath == null || storedPath.isBlank()) return null;
+
+        // 1. absolute path (all new uploads land here)
+        File f = new File(storedPath);
+        if (f.exists()) return f;
+
+        // 2. relative to user.home
+        f = Paths.get(System.getProperty("user.home"), storedPath).toFile();
+        if (f.exists()) return f;
+
+        // 3. relative to user.dir
+        f = new File(System.getProperty("user.dir"), storedPath);
+        if (f.exists()) return f;
+
+        // 4. filename only, inside uploadDir under user.home
+        String filename = Paths.get(storedPath).getFileName().toString();
+        f = Paths.get(System.getProperty("user.home"), uploadDir, filename).toFile();
+        if (f.exists()) return f;
+
+        // 5. filename only, inside uploadDir under user.dir
+        f = Paths.get(System.getProperty("user.dir"), uploadDir, filename).toFile();
+        if (f.exists()) return f;
+
+        System.err.println("[HallTicket] Cannot resolve: " + storedPath
+                + " | user.home=" + System.getProperty("user.home")
+                + " | user.dir="  + System.getProperty("user.dir")
+                + " | uploadDir=" + uploadDir);
+        return null;
     }
 
     // ── Eligibility ───────────────────────────────────────────
@@ -94,8 +150,9 @@ public class HallTicketService {
                     // Active student: only registrations paid in the current exam cycle
                     if (!currentSem.equals(r.getPayment().getSemester())) return false;
                     if (r.getType() == ExamRegistration.RegistrationType.ARREAR) return true;
-                    return r.getSubject().getSemester() != null
-                            && r.getSubject().getSemester().equals(currentSem);
+                    // SEMESTER type: show current-semester subjects AND HOD-added extra subjects
+                    // (extra subjects may belong to a different semester in the subject table)
+                    return r.getType() == ExamRegistration.RegistrationType.SEMESTER;
                 })
                 .sorted(Comparator
                         .comparing((ExamRegistration r) -> r.getType().name())
@@ -116,12 +173,20 @@ public class HallTicketService {
                 .orElse(allControllers.isEmpty() ? null : allControllers.get(0));
         System.out.println("[HallTicket] Controller sigPath: "
                 + (controller != null ? controller.getSignaturePath() : "none"));
-        return buildPdf(student, regs, controller);
+
+        // Fetch principal with signature if available
+        List<Principal> allPrincipals = principalRepository.findAll();
+        Principal principal = allPrincipals.stream()
+                .filter(p -> p.getSignaturePath() != null && !p.getSignaturePath().isBlank())
+                .findFirst()
+                .orElse(allPrincipals.isEmpty() ? null : allPrincipals.get(0));
+
+        return buildPdf(student, regs, controller, principal, currentSem);
     }
 
     // ── PDF Builder ───────────────────────────────────────────
     private byte[] buildPdf(Student student, List<ExamRegistration> regs,
-                             ExamControllerAdmin ec) {
+                             ExamControllerAdmin ec, Principal principal, Integer currentSem) {
         try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
 
             PdfWriter   writer = new PdfWriter(baos);
@@ -178,10 +243,8 @@ public class HallTicketService {
                     .setTextAlignment(TextAlignment.CENTER).setPadding(2);
             if (student.getPhotoPath() != null && !student.getPhotoPath().isBlank()) {
                 try {
-                    File f = new File(student.getPhotoPath());
-                    if (!f.exists()) f = new File(System.getProperty("user.dir"), student.getPhotoPath());
-                    if (!f.exists()) f = new File("uploads/photos/" + new File(student.getPhotoPath()).getName());
-                    if (f.exists())
+                    File f = resolveFile(student.getPhotoPath());
+                    if (f != null && f.exists())
                         photo.add(new Image(ImageDataFactory.create(f.getAbsolutePath()))
                                 .setWidth(52).setHeight(64)
                                 .setHorizontalAlignment(HorizontalAlignment.CENTER));
@@ -196,7 +259,14 @@ public class HallTicketService {
 
             // Row 2
             det.addCell(dc("Name :", true));
-            det.addCell(dc(student.getName().toUpperCase(), false));
+            String fullName = java.util.stream.Stream.of(
+                    student.getName(),
+                    student.getMiddleName(),
+                    student.getLastName())
+                .filter(n -> n != null && !n.isBlank())
+                .collect(java.util.stream.Collectors.joining(" "))
+                .toUpperCase();
+            det.addCell(dc(fullName, false));
             det.addCell(dc("D.O.B :", true));
             String dob = student.getDateOfBirth() != null
                     ? student.getDateOfBirth().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) : "—";
@@ -233,9 +303,15 @@ public class HallTicketService {
             // Data rows
             for (ExamRegistration reg : regs) {
                 Subject s2 = reg.getSubject();
-                String sem  = s2.getSemester() != null ? String.valueOf(s2.getSemester()) : "—";
-                String date = s2.getExamDate() != null ? s2.getExamDate().format(fmt) : "";
-                String sess = s2.getSession() != null ? s2.getSession() : "";
+                // If subject has no semester number, use the student's current semester
+                // (e.g. Internship or HOD-added extras not tied to a specific semester)
+                String sem  = s2.getSemester() != null ? String.valueOf(s2.getSemester()) : String.valueOf(currentSem);
+                // Look up exam date + session from ExamSchedule table (not subject)
+                String cycle = getExamCycle();
+                java.util.Optional<ExamSchedule> es = scheduleRepository
+                        .findBySubjectSubjectIdAndExamCycle(s2.getSubjectId(), cycle);
+                String date = es.map(e -> e.getExamDate() != null ? e.getExamDate().format(fmt) : "").orElse("");
+                String sess = es.map(e -> e.getSession() != null ? e.getSession() : "").orElse("");
 
                 sub.addCell(sc(sem,  true));
                 sub.addCell(sc(s2.getSubjectCode() != null ? s2.getSubjectCode() : "—", true));
@@ -280,23 +356,42 @@ public class HallTicketService {
             doc.add(foot);
 
             // Signature row
+            String principalDes = principal != null && principal.getDesignation() != null
+                    ? principal.getDesignation() : "Principal";
+            String principalSigPath = principal != null ? principal.getSignaturePath() : null;
+
             Table sig = new Table(UnitValue.createPercentArray(new float[]{1, 1, 1}))
                     .useAllAvailableWidth().setMarginTop(0).setKeepTogether(true);
             sig.addCell(sigC("Signature of the Candidate", null, false));
-            sig.addCell(sigC(ecDes, sigPath, true));
-            sig.addCell(sigC("Signature of the Principal with seal", null, false));
+            sig.addCell(sigC(ecDes, sigPath, sigPath != null && !sigPath.isBlank()));
+            sig.addCell(sigC(principalDes + " with seal", principalSigPath, principalSigPath != null && !principalSigPath.isBlank()));
             doc.add(sig);
             // ═════════════════════════════════════════════════
             //  PAGE 2  —  INSTRUCTIONS
             // ═════════════════════════════════════════════════
             doc.add(new AreaBreak());
 
-            p(doc,"Mohamed Sathak A J College of Engineering, Chennai 603103",
-                    12, true, TextAlignment.CENTER, 2);
-            p(doc,"(An Autonomous Institution)",
-                    10, false, TextAlignment.CENTER, 6);
-            p(doc,"Instructions to the Candidates",
-                    11, true, TextAlignment.CENTER, 10);
+            // ── Page 2: wrap ALL content in a bordered table cell ──
+            // This is the only reliable way to get a margin box in iText.
+            // The outer table fills the page (using page 1 margins 12,18,12,18),
+            // and the single cell has padding=28 and a solid border — so content
+            // is always inside the box regardless of margins.
+            Table page2Box = new Table(UnitValue.createPercentArray(new float[]{1}))
+                    .useAllAvailableWidth()
+                    .setHeight(UnitValue.createPercentValue(100));
+
+            // Build all content as a single cell
+            Cell boxCell = new Cell()
+                    .setBorder(new SolidBorder(ColorConstants.BLACK, 1f))
+                    .setPadding(24f);
+
+            // Header
+            boxCell.add(new Paragraph("Mohamed Sathak A J College of Engineering, Chennai 603103")
+                    .setFontSize(12).setBold().setTextAlignment(TextAlignment.CENTER).setMarginBottom(2).setMarginTop(0));
+            boxCell.add(new Paragraph("(An Autonomous Institution)")
+                    .setFontSize(10).setTextAlignment(TextAlignment.CENTER).setMarginBottom(6).setMarginTop(0));
+            boxCell.add(new Paragraph("Instructions to the Candidates")
+                    .setFontSize(11).setBold().setTextAlignment(TextAlignment.CENTER).setMarginBottom(10).setMarginTop(0));
 
             String[] ins = {
                 "Dress code: Only formal dress is permitted for both Boys and Girls (Multi packeted pants, Track Pant, Shorts, Round Neck T shirts, Printed Shirt / T shirt, Full hand shirts and Shoes are strictly prohibited)",
@@ -320,21 +415,23 @@ public class HallTicketService {
             };
 
             for (int n = 0; n < ins.length; n++) {
-                Paragraph ip = new Paragraph((n+1) + ".  " + ins[n])
-                        .setFontSize(9.5f).setMarginBottom(4)
-                        .setMarginLeft(16).setFirstLineIndent(-16);
-                // No bold on any instruction point
-                doc.add(ip);
+                boxCell.add(new Paragraph((n+1) + ".  " + ins[n])
+                        .setFontSize(9.5f).setMarginBottom(4).setMarginTop(0)
+                        .setMarginLeft(16).setFirstLineIndent(-16));
             }
 
-            doc.add(new Paragraph("\n"));
-            Table stamp = new Table(UnitValue.createPercentArray(new float[]{1,1})).useAllAvailableWidth();
+            // Controller of Examination footer
+            Table stamp = new Table(UnitValue.createPercentArray(new float[]{1,1})).useAllAvailableWidth()
+                    .setMarginTop(6);
             stamp.addCell(new Cell().setBorder(Border.NO_BORDER));
             stamp.addCell(new Cell()
                     .add(new Paragraph("Controller of Examination").setFontSize(9).setBold()
                             .setTextAlignment(TextAlignment.RIGHT))
                     .setBorder(Border.NO_BORDER));
-            doc.add(stamp);
+            boxCell.add(stamp);
+
+            page2Box.addCell(boxCell);
+            doc.add(page2Box);
 
             doc.close();
             return baos.toByteArray();
@@ -375,8 +472,8 @@ public class HallTicketService {
                 .setMinHeight(14);
     }
 
-    /** Signature cell */
-    private Cell sigC(String label, String sigImagePath, boolean isController) {
+    /** Signature cell — works for both controller and principal */
+    private Cell sigC(String label, String sigImagePath, boolean hasSignature) {
         Cell cell = new Cell()
                 .setBorder(new SolidBorder(ColorConstants.BLACK, B))
                 .setHeight(55f)   // Fixed height — all 3 cells equal
@@ -385,28 +482,17 @@ public class HallTicketService {
                 .setPaddingTop(2).setPaddingBottom(3)
                 .setPaddingLeft(3).setPaddingRight(3);
 
-        if (isController && sigImagePath != null && !sigImagePath.isBlank()) {
+        if (hasSignature && sigImagePath != null && !sigImagePath.isBlank()) {
             try {
-                File f = new File(sigImagePath);
-                if (!f.exists()) f = new File(System.getProperty("user.dir"), sigImagePath);
-                if (!f.exists() && !sigImagePath.startsWith("/")) {
-                    f = new File("uploads/photos/" + new File(sigImagePath).getName());
-                }
-                System.out.println("[HallTicket] Trying sig path: " + f.getAbsolutePath() + " exists=" + f.exists());
-                if (f.exists()) {
-                    Image sig = new Image(ImageDataFactory.create(f.getAbsolutePath()));
-                    // Scale to fill cell width (3-col layout, each ~183pt)
-                    // Don't clamp height — let it scale proportionally
-                    // Cell fixed at 44pt, usable ~38pt after padding
-                    // scaleToFit ensures both width and height constraints respected
+                File f = resolveFile(sigImagePath);
+                if (f != null && f.exists()) {
+                    byte[] sigBytes = cleanSignatureBackground(f);
+                    Image sig = new Image(ImageDataFactory.create(sigBytes));
                     sig.scaleToFit(148f, 30f);
                     sig.setHorizontalAlignment(HorizontalAlignment.CENTER);
                     cell.add(sig);
                     System.out.println("[HallTicket] Signature loaded OK: " + f.getAbsolutePath());
                 } else {
-                    System.err.println("[HallTicket] Signature NOT found at: " + f.getAbsolutePath());
-                    System.err.println("[HallTicket] Original path stored: " + sigImagePath);
-                    System.err.println("[HallTicket] user.dir: " + System.getProperty("user.dir"));
                     cell.add(new Paragraph("\u00A0").setFontSize(8));
                 }
             } catch (Exception e) {
@@ -430,5 +516,113 @@ public class HallTicketService {
         if (m >= 4 && m <= 6)  return "MAY / JUN " + y;
         if (m >= 10 && m <= 12) return "NOV / DEC " + y;
         return "APR / MAY " + y;
+    }
+
+    private String getExamCycle() {
+        java.time.LocalDate today = java.time.LocalDate.now();
+        int month = today.getMonthValue(), year = today.getYear();
+        if (month >= 10 || month <= 1) return "NOV/DEC " + (month >= 10 ? year : year - 1);
+        return "APR/MAY " + year;
+    }
+
+    /**
+     * Removes the background from a signature image.
+     *
+     * Since signatures are written only in BLUE, GREEN, or BLACK ink,
+     * we simply keep pixels whose hue and darkness match one of those
+     * three ink colours and whiten everything else — no flood-fill needed.
+     *
+     * Ink detection rules (applied per pixel):
+     *   Black : brightness < 110  AND  low saturation (all channels similar)
+     *   Blue  : blue channel dominates AND pixel is dark (brightness < 190)
+     *   Green : green channel dominates AND pixel is dark (brightness < 190)
+     *
+     * After colour filtering, an iterative neighbour check removes any
+     * remaining isolated speckles that slipped through.
+     */
+    public byte[] cleanSignatureBackground(File imageFile) throws Exception {
+        java.awt.image.BufferedImage src = javax.imageio.ImageIO.read(imageFile);
+        if (src == null) return java.nio.file.Files.readAllBytes(imageFile.toPath());
+
+        int w = src.getWidth(), h = src.getHeight();
+        java.awt.image.BufferedImage out =
+                new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+
+        // ── Pass 1: Keep only blue / green / black ink; whiten everything else ──
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int rgba = src.getRGB(x, y);
+                int a = (rgba >> 24) & 0xFF;
+                int r = (rgba >> 16) & 0xFF;
+                int g = (rgba >> 8)  & 0xFF;
+                int b = rgba         & 0xFF;
+
+                // Flatten semi-transparent pixels onto white
+                if (a < 255) {
+                    r = 255 - (255 - r) * a / 255;
+                    g = 255 - (255 - g) * a / 255;
+                    b = 255 - (255 - b) * a / 255;
+                }
+
+                int brightness = Math.max(r, Math.max(g, b));
+                int darkness   = Math.min(r, Math.min(g, b));
+                int saturation = brightness - darkness; // 0 = grey/black, high = colourful
+
+                boolean isInk = false;
+
+                if (brightness < 190) {  // must be dark enough to be ink at all
+
+                    // BLACK ink: very dark, low saturation (R≈G≈B, all small)
+                    boolean isBlack = brightness < 110 && saturation < 60;
+
+                    // BLUE ink: blue channel is clearly dominant
+                    //   b > r  AND  b >= g - 20  (handles navy / indigo / royal blue)
+                    boolean isBlue  = b > r + 10 && b >= g - 20 && brightness < 190;
+
+                    // GREEN ink: green channel clearly dominates both R and B
+                    boolean isGreen = g > r + 20 && g > b + 10 && brightness < 190;
+
+                    isInk = isBlack || isBlue || isGreen;
+                }
+
+                out.setRGB(x, y, isInk ? ((r << 16) | (g << 8) | b) : 0xFFFFFF);
+            }
+        }
+
+        // ── Pass 2: Iterative speckle removal ──────────────────────────────────
+        // Any dark pixel with < MIN_INK_NEIGHBOURS dark 8-neighbours is noise.
+        // Real strokes are thick; lone specks have almost no dark neighbours.
+        final int INK_BRIGHT_LIMIT   = 190; // same as above
+        final int MIN_INK_NEIGHBOURS = 3;   // speck survives only if ≥3 dark neighbours
+        boolean changed = true;
+        while (changed) {
+            changed = false;
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) {
+                    int pix = out.getRGB(x, y);
+                    int pr = (pix >> 16) & 0xFF, pg = (pix >> 8) & 0xFF, pb = pix & 0xFF;
+                    if (Math.max(pr, Math.max(pg, pb)) >= INK_BRIGHT_LIMIT) continue; // white
+                    int darkN = 0;
+                    for (int dy = -1; dy <= 1; dy++) {
+                        for (int dx = -1; dx <= 1; dx++) {
+                            if (dx == 0 && dy == 0) continue;
+                            int nx = x + dx, ny = y + dy;
+                            if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+                            int np = out.getRGB(nx, ny);
+                            if (Math.max((np>>16)&0xFF, Math.max((np>>8)&0xFF, np&0xFF))
+                                    < INK_BRIGHT_LIMIT) darkN++;
+                        }
+                    }
+                    if (darkN < MIN_INK_NEIGHBOURS) {
+                        out.setRGB(x, y, 0xFFFFFF);
+                        changed = true;
+                    }
+                }
+            }
+        }
+
+        java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+        javax.imageio.ImageIO.write(out, "PNG", bos);
+        return bos.toByteArray();
     }
 }

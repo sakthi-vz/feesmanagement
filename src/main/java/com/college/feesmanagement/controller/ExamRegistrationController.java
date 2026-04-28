@@ -62,8 +62,8 @@ public class ExamRegistrationController {
     }
 
     @GetMapping("/student/{studentId}/total-fee")
-    public ResponseEntity<Map<String, Double>> calculateTotalFee(@PathVariable Long studentId) {
-        return ResponseEntity.ok(Map.of("totalFee", examRegistrationService.calculateTotalFee(studentId)));
+    public ResponseEntity<Map<String, Object>> calculateTotalFee(@PathVariable Long studentId) {
+        return ResponseEntity.ok(examRegistrationService.calculateFeeBreakdown(studentId));
     }
 
     @GetMapping("/all")

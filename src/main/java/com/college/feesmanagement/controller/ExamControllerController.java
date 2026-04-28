@@ -4,16 +4,16 @@ import com.college.feesmanagement.entity.*;
 import com.college.feesmanagement.repository.*;
 import com.college.feesmanagement.service.HallTicketService;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
 import org.springframework.http.*;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -22,50 +22,55 @@ public class ExamControllerController {
 
     private final ExamControllerRepository   controllerRepo;
     private final SubjectRepository          subjectRepo;
+    private final ExamScheduleRepository     scheduleRepo;
     private final StudentRepository          studentRepo;
     private final ExamRegistrationRepository registrationRepository;
-    private final UserRepository           userRepo;
-    private final ExamFeePaymentRepository paymentRepo;
-    private final HallTicketService        hallTicketService;
-    private final BCryptPasswordEncoder    encoder;
+    private final UserRepository             userRepo;
+    private final ExamFeePaymentRepository   paymentRepo;
+    private final HallTicketService          hallTicketService;
+    private final BCryptPasswordEncoder      encoder;
 
     @Value("${upload.photos.dir:uploads/photos}")
     private String uploadDir;
 
     public ExamControllerController(ExamControllerRepository controllerRepo,
                                      SubjectRepository subjectRepo,
+                                     ExamScheduleRepository scheduleRepo,
                                      StudentRepository studentRepo,
                                      ExamRegistrationRepository registrationRepository,
                                      UserRepository userRepo,
                                      ExamFeePaymentRepository paymentRepo,
                                      HallTicketService hallTicketService,
                                      BCryptPasswordEncoder encoder) {
-        this.controllerRepo  = controllerRepo;
-        this.subjectRepo     = subjectRepo;
+        this.controllerRepo         = controllerRepo;
+        this.subjectRepo            = subjectRepo;
+        this.scheduleRepo           = scheduleRepo;
         this.studentRepo            = studentRepo;
         this.registrationRepository = registrationRepository;
         this.userRepo               = userRepo;
-        this.paymentRepo     = paymentRepo;
-        this.hallTicketService = hallTicketService;
-        this.encoder         = encoder;
+        this.paymentRepo            = paymentRepo;
+        this.hallTicketService      = hallTicketService;
+        this.encoder                = encoder;
     }
 
-    // ══ REGISTRATION ══════════════════════════════════════════
+    // ══ REGISTRATION ══════════════════════════════════════════════
 
-    /** POST /exam-controller/register — Admin registers an Exam Controller */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, Object> req) {
         try {
-            String name       = (String) req.get("name");
-            String employeeId = (String) req.get("employeeId");
-            String username   = (String) req.get("username");
-            String email      = (String) req.get("email");
-            String phone      = (String) req.getOrDefault("phone", "");
-            String designation= (String) req.getOrDefault("designation", "Controller of Examinations");
-            String dobStr     = (String) req.get("dateOfBirth");
-            String password   = (String) req.get("password");
+            String name        = (String) req.get("name");
+            String lastName    = (String) req.get("lastName");
+            String employeeId  = (String) req.get("employeeId");
+            String username    = (String) req.get("username");
+            String email       = (String) req.get("email");
+            String phone       = (String) req.getOrDefault("phone", "");
+            String designation = (String) req.getOrDefault("designation", "Controller of Examinations");
+            String dobStr      = (String) req.get("dateOfBirth");
+            String password    = (String) req.get("password");
+            String gender      = (String) req.get("gender");
+            String bloodGroup  = (String) req.get("bloodGroup");
 
-            if (name==null||employeeId==null||username==null||email==null||password==null)
+            if (name==null||lastName==null||lastName.isBlank()||employeeId==null||username==null||email==null||password==null||gender==null||bloodGroup==null)
                 return ResponseEntity.badRequest().body(Map.of("error","All required fields must be filled."));
             if (password.length() < 8)
                 return ResponseEntity.badRequest().body(Map.of("error","Password must be at least 8 characters."));
@@ -86,46 +91,73 @@ public class ExamControllerController {
 
             ExamControllerAdmin ec = new ExamControllerAdmin();
             ec.setName(name);
+            ec.setLastName(lastName);
             ec.setEmployeeId(employeeId);
             ec.setDesignation(designation);
             if (dobStr != null && !dobStr.isBlank())
                 try { ec.setDateOfBirth(LocalDate.parse(dobStr)); } catch (Exception ignored) {}
+            ec.setGender(ExamControllerAdmin.Gender.valueOf(gender));
+            ec.setBloodGroup(ExamControllerAdmin.BloodGroup.valueOf(bloodGroup));
             ec.setUser(user);
             controllerRepo.save(ec);
 
             return ResponseEntity.status(201).body(Map.of(
                 "message",      "Exam Controller registered successfully.",
                 "controllerId", ec.getControllerId(),
-                "name",         ec.getName()
+                "name",         java.util.stream.Stream.of(ec.getName(), ec.getMiddleName(), ec.getLastName()).filter(n -> n != null && !n.isBlank()).collect(java.util.stream.Collectors.joining(" ")),
+                "lastName",     ec.getLastName() != null ? ec.getLastName() : ""
             ));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error","Registration failed: "+e.getMessage()));
         }
     }
 
-    // ══ SIGNATURE UPLOAD ══════════════════════════════════════
+    // ══ SIGNATURE / PHOTO UPLOAD ══════════════════════════════════
 
-    /** POST /exam-controller/{id}/upload-signature — Upload controller's signature image */
     @PostMapping("/{id}/upload-signature")
     public ResponseEntity<?> uploadSignature(@PathVariable Long id,
                                               @RequestParam("signature") MultipartFile file) {
         try {
             ExamControllerAdmin ec = controllerRepo.findById(id)
                     .orElseThrow(() -> new RuntimeException("Controller not found."));
-
             String path = saveImage(file, "controller_sig_" + id);
             ec.setSignaturePath(path);
             controllerRepo.save(ec);
-
             return ResponseEntity.ok(Map.of("success", true,
-                    "message", "Signature uploaded successfully.",
-                    "signaturePath", path));
+                    "message", "Signature uploaded successfully.", "signaturePath", path));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    /** POST /exam-controller/{id}/upload-photo — Upload controller's profile photo */
+    /**
+     * Returns the COE signature as a base64 data URL — used by the frontend PDF export.
+     * Avoids all MIME-sniffing and popup-window fetch issues by embedding inline.
+     */
+    @GetMapping("/{id}/signature-base64")
+    public ResponseEntity<?> getSignatureBase64(@PathVariable Long id) {
+        try {
+            ExamControllerAdmin ec = controllerRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Controller not found."));
+            String sigPath = ec.getSignaturePath();
+            if (sigPath == null || sigPath.isBlank())
+                return ResponseEntity.ok(Map.of("dataUrl", ""));
+
+            java.io.File f = resolveFile(sigPath);
+            if (f == null || !f.exists())
+                return ResponseEntity.ok(Map.of("dataUrl", ""));
+
+            // Clean the signature background before encoding
+            byte[] bytes = hallTicketService.cleanSignatureBackground(f);
+            // Always PNG after cleaning
+            String dataUrl = "data:image/png;base64," +
+                             java.util.Base64.getEncoder().encodeToString(bytes);
+            return ResponseEntity.ok(Map.of("dataUrl", dataUrl));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/{id}/upload-photo")
     public ResponseEntity<?> uploadPhoto(@PathVariable Long id,
                                           @RequestParam("photo") MultipartFile file) {
@@ -135,91 +167,139 @@ public class ExamControllerController {
             String path = saveImage(file, "controller_photo_" + id);
             ec.setPhotoPath(path);
             controllerRepo.save(ec);
-            return ResponseEntity.ok(Map.of("success", true, "photoPath", path));
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    // ══ SUBJECT SCHEDULE MANAGEMENT ═══════════════════════════
-
-    /** PUT /exam-controller/subjects/{subjectId}/schedule — Set exam date + session */
-    @PutMapping("/subjects/{subjectId}/schedule")
-    public ResponseEntity<?> setSchedule(@PathVariable Long subjectId,
-                                          @RequestBody Map<String, String> body) {
-        try {
-            Subject subject = subjectRepo.findById(subjectId)
-                    .orElseThrow(() -> new RuntimeException("Subject not found."));
-
-            String examDate = body.get("examDate");
-            String session  = body.get("session");
-
-            if (examDate == null || examDate.isBlank()) {
-                subject.setExamDate(null);
-            } else {
-                subject.setExamDate(LocalDate.parse(examDate));
-            }
-            if (session == null || session.isBlank()) {
-                subject.setSession(null);
-            } else {
-                subject.setSession(session);
-            }
-
-            subjectRepo.save(subject);
-
             return ResponseEntity.ok(Map.of(
-                "success",      true,
-                "message",      "Schedule updated for: " + subject.getName(),
-                "subjectId",    subjectId,
-                "examDate",     subject.getExamDate() != null ? subject.getExamDate().toString() : "",
-                "session",      subject.getSession() != null ? subject.getSession() : ""
+                    "success", true,
+                    "photoPath", path,
+                    "photoUrl", "/photos/view/" + Paths.get(path).getFileName().toString()
             ));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
-    /** POST /exam-controller/subjects/bulk-schedule — Set schedule for many subjects at once */
+    // ══ EXAM SCHEDULE MANAGEMENT ══════════════════════════════════
+
+    @PutMapping("/subjects/{subjectId}/schedule")
+    @Transactional
+    public ResponseEntity<?> setSchedule(@PathVariable Long subjectId,
+                                          @RequestBody Map<String, String> body) {
+        try {
+            Subject subject = subjectRepo.findById(subjectId)
+                    .orElseThrow(() -> new RuntimeException("Subject not found."));
+
+            String cycle       = buildExamCycle();
+            String academicYear = buildAcademicYear();
+            String examDateStr = body.get("examDate");
+            String session     = body.get("session");
+            String setBy       = body.getOrDefault("setBy", "Controller");
+
+            ExamSchedule schedule = scheduleRepo
+                    .findBySubjectSubjectIdAndExamCycle(subjectId, cycle)
+                    .orElseGet(() -> {
+                        ExamSchedule s = new ExamSchedule();
+                        s.setSubject(subject);
+                        s.setExamCycle(cycle);
+                        s.setAcademicYear(academicYear);
+                        return s;
+                    });
+
+            schedule.setExamDate(examDateStr == null || examDateStr.isBlank()
+                    ? null : LocalDate.parse(examDateStr));
+            schedule.setSession(session == null || session.isBlank() ? null : session);
+            schedule.setUpdatedOn(LocalDateTime.now());
+            schedule.setSetBy(setBy);
+            scheduleRepo.save(schedule);
+
+            return ResponseEntity.ok(Map.of(
+                "success",   true,
+                "message",   "Schedule updated for: " + subject.getName(),
+                "subjectId", subjectId,
+                "examDate",  schedule.getExamDate() != null ? schedule.getExamDate().toString() : "",
+                "session",   schedule.getSession() != null ? schedule.getSession() : "",
+                "examCycle", cycle,
+                "scheduled", schedule.isScheduled()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/subjects/bulk-schedule")
+    @Transactional
     public ResponseEntity<?> bulkSchedule(@RequestBody List<Map<String, String>> items) {
+        String cycle       = buildExamCycle();
+        String academicYear = buildAcademicYear();
         int updated = 0;
         List<String> errors = new ArrayList<>();
+
         for (Map<String, String> item : items) {
             try {
-                Long id = Long.parseLong(item.get("subjectId"));
-                Subject sub = subjectRepo.findById(id).orElse(null);
-                if (sub == null) { errors.add("Subject " + id + " not found"); continue; }
+                Long subjectId = Long.parseLong(item.get("subjectId"));
+                Subject subject = subjectRepo.findById(subjectId).orElse(null);
+                if (subject == null) { errors.add("Subject " + subjectId + " not found"); continue; }
+
+                ExamSchedule schedule = scheduleRepo
+                        .findBySubjectSubjectIdAndExamCycle(subjectId, cycle)
+                        .orElseGet(() -> {
+                            ExamSchedule s = new ExamSchedule();
+                            s.setSubject(subject);
+                            s.setExamCycle(cycle);
+                            s.setAcademicYear(academicYear);
+                            return s;
+                        });
+
                 String ed = item.get("examDate"), se = item.get("session");
-                // Always set — empty string means CLEAR (set to null)
-                if (ed == null || ed.isBlank()) {
-                    sub.setExamDate(null);
-                } else {
-                    sub.setExamDate(LocalDate.parse(ed));
-                }
-                if (se == null || se.isBlank()) {
-                    sub.setSession(null);
-                } else {
-                    sub.setSession(se);
-                }
-                subjectRepo.save(sub);
+                schedule.setExamDate(ed == null || ed.isBlank() ? null : LocalDate.parse(ed));
+                schedule.setSession(se == null || se.isBlank() ? null : se);
+                schedule.setUpdatedOn(LocalDateTime.now());
+                scheduleRepo.save(schedule);
                 updated++;
-            } catch (Exception e) { errors.add(e.getMessage()); }
+            } catch (Exception e) {
+                errors.add(e.getMessage());
+            }
         }
         return ResponseEntity.ok(Map.of("updated", updated, "errors", errors));
     }
 
-    /** GET /exam-controller/subjects — All subjects with their schedule */
+    @PostMapping("/schedule/reset")
+    @Transactional
+    public ResponseEntity<?> resetSchedule(@RequestParam(required = false) String targetCycle) {
+        try {
+            String cycle = (targetCycle != null && !targetCycle.isBlank()) ? targetCycle : buildExamCycle();
+            int deleted = scheduleRepo.deleteByExamCycle(cycle);
+            return ResponseEntity.ok(Map.of(
+                "success",   true,
+                "message",   "Schedule cleared for cycle: " + cycle,
+                "deleted",   deleted,
+                "examCycle", cycle
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/subjects")
-    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getSubjects(
             @RequestParam(required = false) Long deptId,
             @RequestParam(required = false) Integer semester) {
         try {
+            String cycle = buildExamCycle();
             List<Subject> all = subjectRepo.findAllWithDepartment();
-            if (deptId != null)   all = all.stream().filter(s -> s.getDepartment() != null && s.getDepartment().getDeptId().equals(deptId)).toList();
-            if (semester != null) all = all.stream().filter(s -> semester.equals(s.getSemester())).toList();
+            if (deptId != null)
+                all = all.stream().filter(s -> s.getDepartment() != null
+                        && s.getDepartment().getDeptId().equals(deptId)).toList();
+            if (semester != null)
+                all = all.stream().filter(s -> semester.equals(s.getSemester())).toList();
+
+            // Build schedule map: subjectId -> ExamSchedule for O(1) lookup
+            Map<Long, ExamSchedule> scheduleMap = new HashMap<>();
+            scheduleRepo.findByExamCycle(cycle)
+                    .forEach(es -> scheduleMap.put(es.getSubject().getSubjectId(), es));
+
             return ResponseEntity.ok(all.stream().map(s -> {
-                Map<String,Object> m = new LinkedHashMap<>();
+                ExamSchedule es = scheduleMap.get(s.getSubjectId());
+                Map<String, Object> m = new LinkedHashMap<>();
                 m.put("subjectId",   s.getSubjectId());
                 m.put("name",        s.getName());
                 m.put("subjectCode", s.getSubjectCode() != null ? s.getSubjectCode() : "");
@@ -227,9 +307,10 @@ public class ExamControllerController {
                 m.put("semester",    s.getSemester());
                 m.put("department",  s.getDepartment() != null ? s.getDepartment().getDeptName() : "");
                 m.put("deptId",      s.getDepartment() != null ? s.getDepartment().getDeptId() : null);
-                m.put("examDate",    s.getExamDate() != null ? s.getExamDate().toString() : "");
-                m.put("session",     s.getSession() != null ? s.getSession() : "");
-                m.put("scheduled",   s.getExamDate() != null && s.getSession() != null && !s.getSession().isBlank());
+                m.put("examDate",    es != null && es.getExamDate() != null ? es.getExamDate().toString() : "");
+                m.put("session",     es != null && es.getSession() != null ? es.getSession() : "");
+                m.put("scheduled",   es != null && es.isScheduled());
+                m.put("examCycle",   cycle);
                 return m;
             }).toList());
         } catch (Exception e) {
@@ -237,9 +318,22 @@ public class ExamControllerController {
         }
     }
 
-    // ══ HALL TICKET GENERATION ════════════════════════════════
+    @GetMapping("/schedule/current")
+    public ResponseEntity<?> getCurrentScheduleInfo() {
+        String cycle = buildExamCycle();
+        long total     = scheduleRepo.countByExamCycle(cycle);
+        long scheduled = scheduleRepo.countScheduledByExamCycle(cycle);
+        return ResponseEntity.ok(Map.of(
+            "examCycle",    cycle,
+            "academicYear", buildAcademicYear(),
+            "totalEntries", total,
+            "scheduled",    scheduled,
+            "pending",      total - scheduled
+        ));
+    }
 
-    /** GET /exam-controller/hall-ticket/check/{studentId} */
+    // ══ HALL TICKET ═══════════════════════════════════════════════
+
     @GetMapping("/hall-ticket/check/{studentId}")
     public ResponseEntity<?> checkEligibility(@PathVariable Long studentId) {
         try {
@@ -259,7 +353,6 @@ public class ExamControllerController {
         }
     }
 
-    /** GET /exam-controller/hall-ticket/download/{studentId} */
     @GetMapping("/hall-ticket/download/{studentId}")
     public ResponseEntity<byte[]> downloadHallTicket(@PathVariable Long studentId) {
         try {
@@ -277,51 +370,33 @@ public class ExamControllerController {
         }
     }
 
-    /** GET /exam-controller/students — All students with eligibility info */
     @GetMapping("/students")
     public ResponseEntity<?> getStudents(@RequestParam(required = false) Long deptId) {
         try {
             List<Student> all = studentRepo.findAll();
             if (deptId != null) all = all.stream()
-                    .filter(s -> s.getDepartment() != null && s.getDepartment().getDeptId().equals(deptId)).toList();
+                    .filter(s -> s.getDepartment() != null
+                            && s.getDepartment().getDeptId().equals(deptId)).toList();
 
-            // FILTER RULES:
-            // COMPLETED students:
-            //   Show if they have UNPAID arrear (registered, needs payment → hall ticket after paying)
-            //   OR paid arrear where payment.semester matches current academic semester (just paid this cycle)
-            // ACTIVE students:
-            //   Show only if they have paid SEMESTER regs for CURRENT semester
-
-            // Determine current exam cycle year for comparison
-            int currentYear = java.time.LocalDate.now().getYear();
+            int currentYear = LocalDate.now().getYear();
 
             List<Student> filtered = all.stream().filter(s -> {
                 boolean isCompleted = s.getProgrammeStatus() == Student.ProgrammeStatus.COMPLETED;
                 if (isCompleted) {
                     List<ExamRegistration> arrears = registrationRepository
                             .findByStudentStudentId(s.getStudentId()).stream()
-                            .filter(r -> r.getType() == ExamRegistration.RegistrationType.ARREAR)
-                            .toList();
-
-                    // Case 1: Has unpaid arrear registration (registered but fee not paid yet)
-                    boolean hasUnpaidArrear = arrears.stream()
-                            .anyMatch(r -> r.getPayment() == null);
-
-                    // Case 2: Has paid arrear where payment was made in current or previous year
-                    // (i.e. recently paid arrear — needs hall ticket)
+                            .filter(r -> r.getType() == ExamRegistration.RegistrationType.ARREAR).toList();
+                    boolean hasUnpaidArrear = arrears.stream().anyMatch(r -> r.getPayment() == null);
                     boolean hasPaidArrearRecent = arrears.stream()
                             .anyMatch(r -> r.getPayment() != null
                                     && r.getPayment().getStatus() == ExamFeePayment.PaymentStatus.COMPLETED
                                     && r.getPayment().getPaymentDate() != null
                                     && r.getPayment().getPaymentDate().getYear() >= currentYear - 1);
-
                     return hasUnpaidArrear || hasPaidArrearRecent;
                 } else {
-                    // ACTIVE: must have paid SEMESTER registrations for CURRENT semester
                     Integer sem = s.getCurrentSemester();
                     if (sem == null) return false;
-                    return registrationRepository
-                            .findByStudentStudentId(s.getStudentId()).stream()
+                    return registrationRepository.findByStudentStudentId(s.getStudentId()).stream()
                             .anyMatch(r -> r.getPayment() != null
                                     && r.getType() == ExamRegistration.RegistrationType.SEMESTER
                                     && r.getSubject().getSemester() != null
@@ -330,21 +405,22 @@ public class ExamControllerController {
             }).toList();
 
             return ResponseEntity.ok(filtered.stream().map(s -> {
-                Map<String,Object> m = new LinkedHashMap<>();
-                m.put("studentId",    s.getStudentId());
-                m.put("name",         s.getName());
-                m.put("rollNo",       s.getRollNo());
-                m.put("department",   s.getDepartment() != null ? s.getDepartment().getDeptName() : "—");
-                m.put("deptId",       s.getDepartment() != null ? s.getDepartment().getDeptId() : null);
-                m.put("semester",     s.getCurrentSemester() != null ? s.getCurrentSemester() : 1);
-                m.put("attendance",   s.getAttendancePercentage() != null ? s.getAttendancePercentage() : 0.0);
-                m.put("eligible",     s.getEligibilityStatus() == Student.EligibilityStatus.ELIGIBLE);
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("studentId",       s.getStudentId());
+                String fullName = java.util.stream.Stream.of(s.getName(), s.getMiddleName(), s.getLastName())
+                        .filter(n -> n != null && !n.isBlank())
+                        .collect(java.util.stream.Collectors.joining(" "));
+                m.put("name",            fullName);
+                m.put("rollNo",          s.getRollNo());
+                m.put("department",      s.getDepartment() != null ? s.getDepartment().getDeptName() : "—");
+                m.put("deptId",          s.getDepartment() != null ? s.getDepartment().getDeptId() : null);
+                m.put("semester",        s.getCurrentSemester() != null ? s.getCurrentSemester() : 1);
+                m.put("attendance",      s.getAttendancePercentage() != null ? s.getAttendancePercentage() : 0.0);
+                m.put("eligible",        s.getEligibilityStatus() == Student.EligibilityStatus.ELIGIBLE);
                 boolean feePaid = isFeePaid(s.getStudentId());
-                m.put("feePaid",      feePaid);
-                boolean eligible = s.getEligibilityStatus() == Student.EligibilityStatus.ELIGIBLE;
-                m.put("canGenerate",  eligible && feePaid);
+                m.put("feePaid",         feePaid);
+                m.put("canGenerate",     s.getEligibilityStatus() == Student.EligibilityStatus.ELIGIBLE && feePaid);
                 m.put("programmeStatus", s.getProgrammeStatus() != null ? s.getProgrammeStatus().name() : "ACTIVE");
-                // hasArrear: true if student has any ARREAR registration
                 boolean hasArrear = registrationRepository.findByStudentStudentId(s.getStudentId()).stream()
                         .anyMatch(r -> r.getType() == ExamRegistration.RegistrationType.ARREAR);
                 m.put("hasArrear", hasArrear);
@@ -355,28 +431,130 @@ public class ExamControllerController {
         }
     }
 
-    /** GET /exam-controller/me?email={email} — Get controller profile */
-    @GetMapping("/me")
-    public ResponseEntity<?> getProfile(@RequestParam String email) {
-        return controllerRepo.findByUserEmail(email)
-                .map(ec -> ResponseEntity.ok((Object) Map.of(
-                        "controllerId", ec.getControllerId(),
-                        "name",        ec.getName(),
-                        "employeeId",  ec.getEmployeeId(),
-                        "designation", ec.getDesignation() != null ? ec.getDesignation() : "",
-                        "hasSignature",ec.getSignaturePath() != null && !ec.getSignaturePath().isBlank(),
-                        "signatureUrl", ec.getSignaturePath() != null && !ec.getSignaturePath().isBlank()
-                                ? "/photos/view/" + java.nio.file.Paths.get(ec.getSignaturePath()).getFileName().toString()
-                                : ""
-                )))
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getProfileById(@PathVariable Long id) {
+        return controllerRepo.findById(id)
+                .map(ec -> {
+                    java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+                    m.put("controllerId", ec.getControllerId());
+                    m.put("name",         ec.getName());
+                    m.put("middleName",   ec.getMiddleName() != null ? ec.getMiddleName() : "");
+                    m.put("lastName",     ec.getLastName() != null ? ec.getLastName() : "");
+                    m.put("employeeId",   ec.getEmployeeId());
+                    m.put("designation",  ec.getDesignation() != null ? ec.getDesignation() : "");
+                    m.put("dateOfBirth",  ec.getDateOfBirth() != null ? ec.getDateOfBirth().toString() : "");
+                    m.put("phone",        ec.getUser() != null && ec.getUser().getPhone() != null ? ec.getUser().getPhone() : "");
+                    m.put("email",        ec.getUser() != null && ec.getUser().getEmail() != null ? ec.getUser().getEmail() : "");
+                    m.put("photoUrl",     ec.getPhotoPath() != null && !ec.getPhotoPath().isBlank()
+                                ? "/photos/view/" + Paths.get(ec.getPhotoPath()).getFileName().toString()
+                                : "");
+                    m.put("hasSignature", ec.getSignaturePath() != null && !ec.getSignaturePath().isBlank());
+                    m.put("signatureUrl", ec.getSignaturePath() != null && !ec.getSignaturePath().isBlank()
+                                ? "/photos/view/" + Paths.get(ec.getSignaturePath()).getFileName().toString()
+                                : "");
+                    m.put("gender",      ec.getGender() != null ? ec.getGender().name() : "");
+                    m.put("bloodGroup",  ec.getBloodGroup() != null ? ec.getBloodGroup().name() : "");
+                    return ResponseEntity.ok((Object) m);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    // ── Helpers ───────────────────────────────────────────────
+    @GetMapping("/me")
+    public ResponseEntity<?> getProfile(@RequestParam String email) {
+        return controllerRepo.findByUserEmail(email)
+                .map(ec -> {
+                    java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
+                    m.put("controllerId", ec.getControllerId());
+                    m.put("name",         ec.getName());
+                    m.put("middleName",   ec.getMiddleName() != null ? ec.getMiddleName() : "");
+                    m.put("lastName",     ec.getLastName() != null ? ec.getLastName() : "");
+                    m.put("employeeId",   ec.getEmployeeId());
+                    m.put("designation",  ec.getDesignation() != null ? ec.getDesignation() : "");
+                    m.put("dateOfBirth",  ec.getDateOfBirth() != null ? ec.getDateOfBirth().toString() : "");
+                    m.put("phone",        ec.getUser() != null && ec.getUser().getPhone() != null ? ec.getUser().getPhone() : "");
+                    m.put("email",        ec.getUser() != null && ec.getUser().getEmail() != null ? ec.getUser().getEmail() : "");
+                    m.put("photoUrl",     ec.getPhotoPath() != null && !ec.getPhotoPath().isBlank()
+                                ? "/photos/view/" + Paths.get(ec.getPhotoPath()).getFileName().toString()
+                                : "");
+                    m.put("hasSignature", ec.getSignaturePath() != null && !ec.getSignaturePath().isBlank());
+                    m.put("signatureUrl", ec.getSignaturePath() != null && !ec.getSignaturePath().isBlank()
+                                ? "/photos/view/" + Paths.get(ec.getSignaturePath()).getFileName().toString()
+                                : "");
+                    m.put("gender",      ec.getGender() != null ? ec.getGender().name() : "");
+                    m.put("bloodGroup",  ec.getBloodGroup() != null ? ec.getBloodGroup().name() : "");
+                    return ResponseEntity.ok((Object) m);
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────
 
     private boolean isFeePaid(Long studentId) {
         return paymentRepo.findByStudentStudentId(studentId).stream()
                 .anyMatch(p -> p.getStatus() == ExamFeePayment.PaymentStatus.COMPLETED);
+    }
+
+    private String buildExamCycle() {
+        LocalDate today = LocalDate.now();
+        int month = today.getMonthValue(), year = today.getYear();
+        if (month >= 10 || month <= 1) return "NOV/DEC " + (month >= 10 ? year : year - 1);
+        return "APR/MAY " + year;
+    }
+
+    private String buildAcademicYear() {
+        LocalDate today = LocalDate.now();
+        int month = today.getMonthValue(), year = today.getYear();
+        int startYear = (month <= 5) ? year - 1 : year;
+        return startYear + "-" + (startYear + 1);
+    }
+
+    // ── Change password ───────────────────────────────────────────────────────
+    @PostMapping("/{id}/change-password")
+    public ResponseEntity<?> changePassword(@PathVariable Long id,
+                                             @RequestBody Map<String, String> body) {
+        try {
+            ExamControllerAdmin ec = controllerRepo.findById(id)
+                    .orElseThrow(() -> new RuntimeException("Exam Controller not found."));
+            if (ec.getUser() == null)
+                return ResponseEntity.badRequest().body(Map.of("error", "No user account linked."));
+            User user = ec.getUser();
+            String curPw = body.get("currentPassword");
+            String newPw = body.get("newPassword");
+            if (curPw == null || curPw.isBlank())
+                return ResponseEntity.badRequest().body(Map.of("error", "Current password is required."));
+            if (!encoder.matches(curPw, user.getPassword()))
+                return ResponseEntity.badRequest().body(Map.of("error", "Current password is incorrect."));
+            if (newPw == null || newPw.trim().length() < 8)
+                return ResponseEntity.badRequest().body(Map.of("error", "New password must be at least 8 characters."));
+            user.setPassword(encoder.encode(newPw.trim()));
+            userRepo.save(user);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Password changed successfully."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    private Path resolveUploadDir() {
+        Path p = Paths.get(uploadDir);
+        if (p.isAbsolute()) return p;
+        return Paths.get(System.getProperty("user.home")).resolve(uploadDir);
+    }
+
+    /** Resolves a stored absolute path to an existing File, with fallbacks for relative paths. */
+    private java.io.File resolveFile(String storedPath) {
+        if (storedPath == null || storedPath.isBlank()) return null;
+        java.io.File f = new java.io.File(storedPath);
+        if (f.exists()) return f;
+        f = Paths.get(System.getProperty("user.home"), storedPath).toFile();
+        if (f.exists()) return f;
+        f = new java.io.File(System.getProperty("user.dir"), storedPath);
+        if (f.exists()) return f;
+        String filename = Paths.get(storedPath).getFileName().toString();
+        f = Paths.get(System.getProperty("user.home"), uploadDir, filename).toFile();
+        if (f.exists()) return f;
+        f = Paths.get(System.getProperty("user.dir"), uploadDir, filename).toFile();
+        if (f.exists()) return f;
+        return null;
     }
 
     private String saveImage(MultipartFile file, String prefix) throws IOException {
@@ -384,17 +562,53 @@ public class ExamControllerController {
         Set<String> allowed = Set.of("image/jpeg","image/jpg","image/png","image/webp");
         if (!allowed.contains(file.getContentType())) throw new RuntimeException("Only JPG/PNG/WEBP allowed.");
         if (file.getSize() > 3 * 1024 * 1024) throw new RuntimeException("File must be under 3 MB.");
-        Path dir = Paths.get(uploadDir);
+        Path dir = resolveUploadDir();
         Files.createDirectories(dir);
-        // Delete old file with same prefix
         try (var stream = Files.list(dir)) {
             stream.filter(p -> p.getFileName().toString().startsWith(prefix + "_"))
                   .forEach(p -> { try { Files.deleteIfExists(p); } catch (IOException ignored) {} });
         }
-        String ext = file.getOriginalFilename() != null && file.getOriginalFilename().contains(".")
-                ? file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.')).toLowerCase() : ".jpg";
+        // Always save signatures as PNG with transparent background
+        boolean isSignature = prefix.contains("sig");
+        String ext = isSignature ? ".png" :
+                (file.getOriginalFilename() != null && file.getOriginalFilename().contains(".")
+                ? file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.')).toLowerCase()
+                : ".jpg");
         Path dest = dir.resolve(prefix + "_" + System.currentTimeMillis() + ext);
-        Files.write(dest, file.getBytes());
-        return dest.toString();
+        if (isSignature) {
+            saveSignatureTransparent(file.getBytes(), dest);
+        } else {
+            Files.write(dest, file.getBytes());
+        }
+        return dest.toAbsolutePath().toString();
+    }
+
+    /** Removes near-white background from signature and saves as transparent PNG */
+    private void saveSignatureTransparent(byte[] imageBytes, Path dest) throws IOException {
+        java.io.ByteArrayInputStream bis = new java.io.ByteArrayInputStream(imageBytes);
+        java.awt.image.BufferedImage src = javax.imageio.ImageIO.read(bis);
+        if (src == null) { Files.write(dest, imageBytes); return; }
+        int w = src.getWidth(), h = src.getHeight();
+        // Use RGB (no alpha) so iText renders correctly without black fill
+        java.awt.image.BufferedImage out = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_RGB);
+        java.awt.Graphics2D g2d = out.createGraphics();
+        g2d.setColor(java.awt.Color.WHITE);
+        g2d.fillRect(0, 0, w, h);
+        g2d.dispose();
+        int threshold = 240;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                int rgba = src.getRGB(x, y);
+                int r = (rgba >> 16) & 0xFF;
+                int g = (rgba >> 8)  & 0xFF;
+                int b = rgba         & 0xFF;
+                if (r >= threshold && g >= threshold && b >= threshold) {
+                    out.setRGB(x, y, 0xFFFFFF); // replace yellow/cream with white
+                } else {
+                    out.setRGB(x, y, (r << 16) | (g << 8) | b); // keep ink pixel
+                }
+            }
+        }
+        javax.imageio.ImageIO.write(out, "PNG", dest.toFile());
     }
 }

@@ -41,7 +41,7 @@ public class HallTicketController {
             return ResponseEntity.ok(Map.of(
                 "eligible",   true,
                 "message",    "Student is eligible for hall ticket.",
-                "name",       student.getName(),
+                "name",       java.util.stream.Stream.of(student.getName(), student.getMiddleName(), student.getLastName()).filter(n -> n != null && !n.isBlank()).collect(java.util.stream.Collectors.joining(" ")),
                 "rollNo",     student.getRollNo(),
                 "semester",   student.getCurrentSemester() != null ? student.getCurrentSemester() : 1,
                 "attendance", student.getAttendancePercentage() != null ? student.getAttendancePercentage() : 0.0,

@@ -3,7 +3,6 @@ package com.college.feesmanagement.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.time.LocalDate;
 
 @Entity
 @Table(name = "subjects")
@@ -30,14 +29,6 @@ public class Subject {
     private SubjectType type;
 
     private Double fee;
-
-    // ── Hall Ticket fields ────────────────────────────────────
-    @Column(name = "exam_date")
-    private LocalDate examDate;
-
-    // AN = Afternoon, FN = Forenoon
-    @Column(name = "session", length = 5)
-    private String session;
 
     public enum SubjectType {
         THEORY(400.0),
@@ -78,10 +69,4 @@ public class Subject {
 
     public Double getFee() { return fee; }
     public void setFee(Double fee) { this.fee = fee; }
-
-    public LocalDate getExamDate() { return examDate; }
-    public void setExamDate(LocalDate examDate) { this.examDate = examDate; }
-
-    public String getSession() { return session; }
-    public void setSession(String session) { this.session = session; }
 }

@@ -134,6 +134,35 @@ public class ExamRegistrationService {
                 .sum();
     }
 
+    /** Returns a detailed breakdown: semesterFee, arrearFee, totalFee, counts. */
+    public java.util.Map<String, Object> calculateFeeBreakdown(Long studentId) {
+        List<ExamRegistration> unpaid = getUnpaidRegistrations(studentId);
+        // Check if HOD has allocated ANY subjects (paid or unpaid) for this student
+        List<ExamRegistration> allRegs = examRegistrationRepository.findByStudentStudentId(studentId);
+        double semesterFee = unpaid.stream()
+                .filter(r -> r.getType() == ExamRegistration.RegistrationType.SEMESTER)
+                .mapToDouble(r -> r.getSubject().getFee())
+                .sum();
+        double arrearFee = unpaid.stream()
+                .filter(r -> r.getType() == ExamRegistration.RegistrationType.ARREAR)
+                .mapToDouble(r -> r.getSubject().getFee())
+                .sum();
+        long semesterCount = unpaid.stream()
+                .filter(r -> r.getType() == ExamRegistration.RegistrationType.SEMESTER)
+                .count();
+        long arrearCount = unpaid.stream()
+                .filter(r -> r.getType() == ExamRegistration.RegistrationType.ARREAR)
+                .count();
+        java.util.Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("semesterFee",   semesterFee);
+        result.put("arrearFee",     arrearFee);
+        result.put("totalFee",      semesterFee + arrearFee);
+        result.put("semesterCount", semesterCount);
+        result.put("arrearCount",   arrearCount);
+        result.put("hasAllocations", !allRegs.isEmpty());
+        return result;
+    }
+
     public List<ExamRegistration> getAllRegistrations() {
         return examRegistrationRepository.findAll();
     }

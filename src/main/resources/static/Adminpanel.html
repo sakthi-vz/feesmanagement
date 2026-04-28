@@ -182,6 +182,12 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .pw-bar.s2 span:nth-child(-n+2){background:var(--warn);}
 .pw-bar.s3 span{background:var(--success);}
 
+/* Password show/hide toggle */
+.pw-wrap{position:relative;display:flex;align-items:center;}
+.pw-wrap input{width:100%;padding-right:42px !important;}
+.pw-eye{position:absolute;right:11px;background:none;border:none;cursor:pointer;color:#94a3b8;padding:0;line-height:1;display:flex;align-items:center;}
+.pw-eye:hover{color:var(--accent);}
+
 /* Photo upload */
 .photo-zone{
   border:2px dashed var(--border);border-radius:var(--radius-sm);
@@ -227,7 +233,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .alert{
   padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;
   font-weight:500;margin-bottom:18px;display:none;
-  display:flex;align-items:center;gap:10px;
+  align-items:center;gap:10px;
 }
 .alert.show{display:flex;}
 .alert.success{background:var(--success-bg);color:#15803d;border:1px solid #bbf7d0;}
@@ -315,6 +321,8 @@ tbody tr:hover td{background:#f8fafc;}
 </style>
 </head>
 <body>
+<a href="#main-content" style="position:absolute;left:-9999px;top:4px;padding:6px 12px;background:#7c3aed;color:#fff;border-radius:6px;font-size:13px;font-weight:600;z-index:99999;text-decoration:none;" onfocus="this.style.left='4px'" onblur="this.style.left='-9999px'">Skip to main content</a>
+
 
 <!-- ── SIDEBAR ─────────────────────────────────────────────────── -->
 <aside class="sidebar" id="sidebar">
@@ -329,42 +337,56 @@ tbody tr:hover td{background:#f8fafc;}
   </div>
 
   <div class="sidebar-section">People</div>
-  <button class="nav-item active" onclick="showPanel('student',this)">
+  <button type="button" class="nav-item active" onclick="showPanel('student',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
     Register Student
   </button>
-  <button class="nav-item" onclick="showPanel('hod',this)">
+  <button type="button" class="nav-item" onclick="showPanel('hod',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
     Register HOD
   </button>
-  <button class="nav-item" onclick="showPanel('admin',this)">
+  <button type="button" class="nav-item" onclick="showPanel('admin',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
     Register Admin
   </button>
-  <button class="nav-item" onclick="showPanel('examcontroller',this)">
+  <button type="button" class="nav-item" onclick="showPanel('examcontroller',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
     Register Exam Controller
   </button>
+  <button type="button" class="nav-item" onclick="showPanel('principal',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M3 20c0-4 4-7 9-7s9 3 9 7"/><path d="M9 12l1.5 4 1.5-2 1.5 2 1.5-4"/></svg>
+    Register Principal
+  </button>
 
   <div class="sidebar-section">Academics</div>
-  <button class="nav-item" onclick="showPanel('department',this)">
+  <button type="button" class="nav-item" onclick="showPanel('department',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     Create Department
   </button>
-  <button class="nav-item" onclick="showPanel('subject',this)">
+  <button type="button" class="nav-item" onclick="showPanel('subject',this)">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
     Create Subject
   </button>
 
   <div class="sidebar-footer">
-    <div class="user-chip">
-      <div class="user-avatar" id="sidebarAvatar">A</div>
-      <div class="user-info">
-        <div class="user-name" id="sidebarName">Administrator</div>
-        <div class="user-role">ADMIN</div>
+    <div class="user-chip" style="flex-direction:column;align-items:stretch;gap:10px;padding:12px;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div id="sidebarAvatarWrap" style="width:40px;height:40px;border-radius:50%;background:var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <span id="sidebarAvatar" style="font-size:15px;font-weight:700;color:#fff;">A</span>
+        </div>
+        <div class="user-info">
+          <div class="user-name" id="sidebarName">Administrator</div>
+          <div id="sidebarDesig" style="font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Administrator</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:3px;padding-top:8px;border-top:1px solid rgba(255,255,255,.08);">
+        <div id="sidebarEmpId" style="font-size:11px;color:rgba(255,255,255,.4);display:none;">
+          <span style="color:rgba(255,255,255,.25);">ID</span> <span id="sidebarEmpIdVal">—</span>
+        </div>
+        <div id="sidebarEmail" style="font-size:11px;color:rgba(255,255,255,.4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:none;" id="sidebarEmailVal"></div>
       </div>
     </div>
-    <button class="btn-signout" onclick="logout()">
+    <button type="button" class="btn-signout" onclick="logout()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Sign out
     </button>
@@ -383,7 +405,7 @@ tbody tr:hover td{background:#f8fafc;}
     </div>
   </header>
 
-  <div class="content">
+  <div class="content" id="main-content">
 
     <!-- ══ STUDENT PANEL ══════════════════════════════════════════ -->
     <div class="panel active" id="studentPanel">
@@ -432,8 +454,16 @@ tbody tr:hover td{background:#f8fafc;}
                 <span class="field-hint">Used as login username · Uppercase only</span>
               </div>
               <div class="field">
-                <label>Full Name <span class="req">*</span></label>
-                <input type="text" name="name" placeholder="As on official records" required>
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" name="firstName" placeholder="First name" required>
+              </div>
+              <div class="field">
+                <label>Middle Name <span class="opt">(optional)</span></label>
+                <input type="text" name="middleName" placeholder="Middle name">
+              </div>
+              <div class="field">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" name="lastName" placeholder="Last name" required>
               </div>
               <div class="field">
                 <label>Email Address <span class="req">*</span></label>
@@ -447,6 +477,29 @@ tbody tr:hover td{background:#f8fafc;}
                 <label>Date of Birth <span class="req">*</span></label>
                 <input type="date" name="dateOfBirth" max="2010-12-31" required>
                 <span class="field-hint">As per official records</span>
+              </div>
+              <div class="field">
+                <label>Gender <span class="req">*</span></label>
+                <select name="gender" id="sGender" required>
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Blood Group <span class="req">*</span></label>
+                <select name="bloodGroup" id="sBloodGroup" required>
+                  <option value="">Select blood group</option>
+                  <option value="A_POS">A+</option>
+                  <option value="A_NEG">A−</option>
+                  <option value="B_POS">B+</option>
+                  <option value="B_NEG">B−</option>
+                  <option value="AB_POS">AB+</option>
+                  <option value="AB_NEG">AB−</option>
+                  <option value="O_POS">O+</option>
+                  <option value="O_NEG">O−</option>
+                </select>
               </div>
               <div class="field">
                 <label>Profile Photo <span class="opt">(optional)</span></label>
@@ -491,13 +544,23 @@ tbody tr:hover td{background:#f8fafc;}
             <div class="form-grid">
               <div class="field">
                 <label>Password <span class="req">*</span></label>
-                <input type="password" name="password" id="sPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="password" id="sPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('sPw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <div class="pw-bar" id="sPwBar"><span></span><span></span><span></span></div>
                 <span class="field-hint" id="sPwHint">At least 8 characters</span>
               </div>
               <div class="field">
                 <label>Confirm Password <span class="req">*</span></label>
-                <input type="password" name="confirmPassword" id="sCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="confirmPassword" id="sCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('sCpw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <span class="field-hint" id="sCpwHint"></span>
               </div>
             </div>
@@ -537,18 +600,6 @@ tbody tr:hover td{background:#f8fafc;}
           </div>
 
           <form id="hodForm" novalidate>
-            <div class="form-section">Admin Authorisation</div>
-            <div class="form-grid">
-              <div class="field">
-                <label>Admin Username <span class="req">*</span></label>
-                <input type="text" id="hodAdminUser" placeholder="Your admin username" autocomplete="off" required>
-              </div>
-              <div class="field">
-                <label>Admin Password <span class="req">*</span></label>
-                <input type="password" id="hodAdminPass" placeholder="Your admin password" required>
-              </div>
-            </div>
-
             <div class="form-section">Professional Details</div>
             <div class="form-grid">
               <div class="field">
@@ -561,9 +612,17 @@ tbody tr:hover td{background:#f8fafc;}
                   <option value="">Select department</option>
                 </select>
               </div>
-              <div class="field form-full">
-                <label>Full Name <span class="req">*</span></label>
-                <input type="text" name="name" placeholder="As on official records" required>
+              <div class="field">
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" name="firstName" id="hodFirstName" placeholder="First name" required>
+              </div>
+              <div class="field">
+                <label>Middle Name <span class="opt">(optional)</span></label>
+                <input type="text" name="middleName" placeholder="Middle name">
+              </div>
+              <div class="field">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" name="lastName" id="hodLastName" placeholder="Last name" required>
               </div>
             </div>
 
@@ -587,6 +646,29 @@ tbody tr:hover td{background:#f8fafc;}
                 <input type="date" name="dateOfBirth" max="2005-12-31" required>
               </div>
               <div class="field">
+                <label>Gender <span class="req">*</span></label>
+                <select name="gender" id="hGender" required>
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Blood Group <span class="req">*</span></label>
+                <select name="bloodGroup" id="hBloodGroup" required>
+                  <option value="">Select blood group</option>
+                  <option value="A_POS">A+</option>
+                  <option value="A_NEG">A−</option>
+                  <option value="B_POS">B+</option>
+                  <option value="B_NEG">B−</option>
+                  <option value="AB_POS">AB+</option>
+                  <option value="AB_NEG">AB−</option>
+                  <option value="O_POS">O+</option>
+                  <option value="O_NEG">O−</option>
+                </select>
+              </div>
+              <div class="field">
                 <label>Profile Photo <span class="opt">(optional)</span></label>
                 <div class="photo-zone" onclick="document.getElementById('hodPhoto').click()">
                   <img id="hodPhotoPreview" class="photo-zone-preview" src="" alt="">
@@ -605,13 +687,23 @@ tbody tr:hover td{background:#f8fafc;}
             <div class="form-grid">
               <div class="field">
                 <label>Password <span class="req">*</span></label>
-                <input type="password" name="password" id="hPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="password" id="hPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('hPw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <div class="pw-bar" id="hPwBar"><span></span><span></span><span></span></div>
                 <span class="field-hint" id="hPwHint">At least 8 characters</span>
               </div>
               <div class="field">
                 <label>Confirm Password <span class="req">*</span></label>
-                <input type="password" name="confirmPassword" id="hCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="confirmPassword" id="hCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('hCpw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <span class="field-hint" id="hCpwHint"></span>
               </div>
             </div>
@@ -661,9 +753,17 @@ tbody tr:hover td{background:#f8fafc;}
                 <label>Designation <span class="req">*</span></label>
                 <input type="text" name="designation" placeholder="e.g. Principal, Dean" required>
               </div>
-              <div class="field form-full">
-                <label>Full Name <span class="req">*</span></label>
-                <input type="text" name="name" placeholder="As on official records" required>
+              <div class="field">
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" name="firstName" id="admFirstName" placeholder="First name" required>
+              </div>
+              <div class="field">
+                <label>Middle Name <span class="opt">(optional)</span></label>
+                <input type="text" name="middleName" placeholder="Middle name">
+              </div>
+              <div class="field">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" name="lastName" id="admLastName" placeholder="Last name" required>
               </div>
             </div>
 
@@ -686,6 +786,29 @@ tbody tr:hover td{background:#f8fafc;}
                 <input type="date" name="dateOfBirth" max="2005-12-31" required>
               </div>
               <div class="field">
+                <label>Gender <span class="req">*</span></label>
+                <select name="gender" id="aGender" required>
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Blood Group <span class="req">*</span></label>
+                <select name="bloodGroup" id="aBloodGroup" required>
+                  <option value="">Select blood group</option>
+                  <option value="A_POS">A+</option>
+                  <option value="A_NEG">A−</option>
+                  <option value="B_POS">B+</option>
+                  <option value="B_NEG">B−</option>
+                  <option value="AB_POS">AB+</option>
+                  <option value="AB_NEG">AB−</option>
+                  <option value="O_POS">O+</option>
+                  <option value="O_NEG">O−</option>
+                </select>
+              </div>
+              <div class="field">
                 <label>Profile Photo <span class="opt">(optional)</span></label>
                 <div class="photo-zone" onclick="document.getElementById('adminPhoto').click()">
                   <img id="adminPhotoPreview" class="photo-zone-preview" src="" alt="">
@@ -704,13 +827,23 @@ tbody tr:hover td{background:#f8fafc;}
             <div class="form-grid">
               <div class="field">
                 <label>Password <span class="req">*</span></label>
-                <input type="password" name="password" id="aPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="password" id="aPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('aPw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <div class="pw-bar" id="aPwBar"><span></span><span></span><span></span></div>
                 <span class="field-hint" id="aPwHint">At least 8 characters</span>
               </div>
               <div class="field">
                 <label>Confirm Password <span class="req">*</span></label>
-                <input type="password" name="confirmPassword" id="aCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="confirmPassword" id="aCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('aCpw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <span class="field-hint" id="aCpwHint"></span>
               </div>
             </div>
@@ -903,9 +1036,17 @@ tbody tr:hover td{background:#f8fafc;}
                 <label>Designation</label>
                 <input type="text" name="designation" placeholder="Controller of Examinations" value="Controller of Examinations">
               </div>
-              <div class="field form-full">
-                <label>Full Name <span class="req">*</span></label>
-                <input type="text" name="name" placeholder="As on official records" required>
+              <div class="field">
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" name="firstName" id="ecFirstName" placeholder="First name" required>
+              </div>
+              <div class="field">
+                <label>Middle Name <span class="opt">(optional)</span></label>
+                <input type="text" name="middleName" placeholder="Middle name">
+              </div>
+              <div class="field">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" name="lastName" id="ecLastName" placeholder="Last name" required>
               </div>
             </div>
             <div class="form-section">Account Details</div>
@@ -927,6 +1068,29 @@ tbody tr:hover td{background:#f8fafc;}
                 <input type="date" name="dateOfBirth" max="2000-12-31" required>
               </div>
               <div class="field">
+                <label>Gender <span class="req">*</span></label>
+                <select name="gender" id="ecGender" required>
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Blood Group <span class="req">*</span></label>
+                <select name="bloodGroup" id="ecBloodGroup" required>
+                  <option value="">Select blood group</option>
+                  <option value="A_POS">A+</option>
+                  <option value="A_NEG">A−</option>
+                  <option value="B_POS">B+</option>
+                  <option value="B_NEG">B−</option>
+                  <option value="AB_POS">AB+</option>
+                  <option value="AB_NEG">AB−</option>
+                  <option value="O_POS">O+</option>
+                  <option value="O_NEG">O−</option>
+                </select>
+              </div>
+              <div class="field">
                 <label>Profile Photo <span class="opt">(optional)</span></label>
                 <div class="photo-zone" onclick="document.getElementById('ecPhoto').click()">
                   <img id="ecPhotoPreview" class="photo-zone-preview" src="" alt="">
@@ -944,13 +1108,23 @@ tbody tr:hover td{background:#f8fafc;}
             <div class="form-grid">
               <div class="field">
                 <label>Password <span class="req">*</span></label>
-                <input type="password" name="password" id="ecPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="password" id="ecPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('ecPw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <div class="pw-bar" id="ecPwBar"><span></span><span></span><span></span></div>
                 <span class="field-hint" id="ecPwHint">At least 8 characters</span>
               </div>
               <div class="field">
                 <label>Confirm Password <span class="req">*</span></label>
-                <input type="password" name="confirmPassword" id="ecCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                <div class="pw-wrap">
+                  <input type="password" name="confirmPassword" id="ecCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('ecCpw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
                 <span class="field-hint" id="ecCpwHint"></span>
               </div>
             </div>
@@ -965,8 +1139,165 @@ tbody tr:hover td{background:#f8fafc;}
       </div>
     </div>
 
+    <!-- ══ PRINCIPAL PANEL ══════════════════════════════════════ -->
+    <div class="panel" id="principalPanel">
+      <div class="page-header">
+        <h1>Register New Principal</h1>
+        <p>Principal's signature will appear on every hall ticket PDF</p>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-header-left">
+            <div class="card-icon purple">🏫</div>
+            <div>
+              <div class="card-title">Principal Information</div>
+              <div class="card-subtitle">Their signature will appear on hall ticket PDFs</div>
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="alert" id="principalAlert">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span id="principalAlertText"></span>
+          </div>
+          <form id="principalForm" novalidate>
+            <div class="form-section">Professional Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Employee ID <span class="req">*</span></label>
+                <input type="text" name="employeeId" id="prEmpId" placeholder="e.g. PRI001" required>
+              </div>
+              <div class="field">
+                <label>Designation</label>
+                <input type="text" name="designation" placeholder="Principal" value="Principal">
+              </div>
+              <div class="field">
+                <label>First Name <span class="req">*</span></label>
+                <input type="text" name="firstName" id="prFirstName" placeholder="First name" required>
+              </div>
+              <div class="field">
+                <label>Middle Name <span class="opt">(optional)</span></label>
+                <input type="text" name="middleName" placeholder="Middle name">
+              </div>
+              <div class="field">
+                <label>Last Name <span class="req">*</span></label>
+                <input type="text" name="lastName" id="prLastName" placeholder="Last name" required>
+              </div>
+            </div>
+            <div class="form-section">Account Details</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Username <span class="req">*</span></label>
+                <input type="text" name="username" id="prUsername" placeholder="Login username" required>
+              </div>
+              <div class="field">
+                <label>Email Address <span class="req">*</span></label>
+                <input type="email" name="email" placeholder="principal@college.edu" required>
+              </div>
+              <div class="field">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" placeholder="10-digit mobile" maxlength="10">
+              </div>
+              <div class="field">
+                <label>Date of Birth <span class="req">*</span></label>
+                <input type="date" name="dateOfBirth" max="2000-12-31" required>
+              </div>
+              <div class="field">
+                <label>Gender <span class="req">*</span></label>
+                <select name="gender" id="pGender" required>
+                  <option value="">Select gender</option>
+                  <option value="MALE">Male</option>
+                  <option value="FEMALE">Female</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Blood Group <span class="req">*</span></label>
+                <select name="bloodGroup" id="pBloodGroup" required>
+                  <option value="">Select blood group</option>
+                  <option value="A_POS">A+</option>
+                  <option value="A_NEG">A−</option>
+                  <option value="B_POS">B+</option>
+                  <option value="B_NEG">B−</option>
+                  <option value="AB_POS">AB+</option>
+                  <option value="AB_NEG">AB−</option>
+                  <option value="O_POS">O+</option>
+                  <option value="O_NEG">O−</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Profile Photo <span class="opt">(optional)</span></label>
+                <div class="photo-zone" onclick="document.getElementById('prPhoto').click()">
+                  <img id="prPhotoPreview" class="photo-zone-preview" src="" alt="">
+                  <div id="prPhotoPlaceholder">
+                    <div class="photo-zone-icon">📷</div>
+                    <div class="photo-zone-text">Click to upload</div>
+                    <div class="photo-zone-hint">JPG / PNG / WEBP · Max 2 MB</div>
+                  </div>
+                  <input type="file" id="prPhoto" accept="image/jpeg,image/png,image/webp">
+                </div>
+              </div>
+            </div>
+            <div class="form-section">Security</div>
+            <div class="form-grid">
+              <div class="field">
+                <label>Password <span class="req">*</span></label>
+                <div class="pw-wrap">
+                  <input type="password" name="password" id="prPw" placeholder="Min. 8 characters" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('prPw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <div class="pw-bar" id="prPwBar"><span></span><span></span><span></span></div>
+                <span class="field-hint" id="prPwHint">At least 8 characters</span>
+              </div>
+              <div class="field">
+                <label>Confirm Password <span class="req">*</span></label>
+                <div class="pw-wrap">
+                  <input type="password" name="confirmPassword" id="prCpw" placeholder="Re-enter password" minlength="8" required autocomplete="new-password">
+                  <button type="button" class="pw-eye" onclick="toggleAdminPw('prCpw',this)" aria-label="Toggle password">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  </button>
+                </div>
+                <span class="field-hint" id="prCpwHint"></span>
+              </div>
+            </div>
+            <div style="margin-top:8px;">
+              <button type="submit" class="btn btn-primary" id="prSubmitBtn">
+                <div class="spinner"></div>
+                <span class="btn-label">Register Principal</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
 </div><!-- /content -->
 </div><!-- /main -->
+
+<!-- Admin password prompt modal -->
+<div class="overlay" id="adminPwModal">
+  <div class="modal" style="max-width:380px;">
+    <h3 style="margin-bottom:6px;">Confirm Your Identity</h3>
+    <p style="margin-bottom:18px;">Enter your admin password to authorise this action.</p>
+    <div class="alert" id="adminPwAlert" style="margin-bottom:12px;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span id="adminPwAlertText"></span>
+    </div>
+    <div class="field" style="margin-bottom:16px;">
+      <label>Password <span class="req">*</span></label>
+      <input type="password" id="adminPwInput" placeholder="Your admin password" style="width:100%;">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-ghost" onclick="cancelAdminPw()">Cancel</button>
+      <button type="button" class="btn btn-primary" id="adminPwConfirmBtn" onclick="submitAdminPw()">
+        <div class="spinner"></div>
+        <span class="btn-label">Confirm</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Confirm modal -->
 <div class="overlay" id="confirmModal">
@@ -974,8 +1305,8 @@ tbody tr:hover td{background:#f8fafc;}
     <h3 id="modalTitle">Confirm Registration</h3>
     <p id="modalBody">Please verify before submitting.</p>
     <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" id="modalConfirmBtn">
+      <button type="button" class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button type="button" class="btn btn-primary" id="modalConfirmBtn">
         <div class="spinner"></div>
         <span class="btn-label">Confirm</span>
       </button>
@@ -984,7 +1315,7 @@ tbody tr:hover td{background:#f8fafc;}
 </div>
 
 <script>
-const API_BASE_URL = 'http://localhost:8080';
+const API_BASE_URL = window.API_BASE_URL || 'http://localhost:8080';
 let currentUser = {};
 let pendingAction = null;
 
@@ -992,7 +1323,6 @@ let pendingAction = null;
 window.addEventListener('load', async () => {
     try { currentUser = JSON.parse(sessionStorage.getItem('user') || '{}'); } catch { currentUser = {}; }
     if (!currentUser.role || currentUser.role !== 'ADMIN') {
-        alert('Access denied. Admin privileges required.');
         window.location.href = 'index.html'; return;
     }
     const name = currentUser.name || currentUser.username || 'Admin';
@@ -1000,21 +1330,24 @@ window.addEventListener('load', async () => {
     document.getElementById('sidebarAvatar').textContent = name.charAt(0).toUpperCase();
     await loadDepartments();
     loadStats();
+    loadAdminProfile();
 });
 
 // ── Navigation ─────────────────────────────────────────────────
 const PANEL_META = {
-    student:    { title: 'Register Student',    sub: 'Create a new student account' },
-    hod:        { title: 'Register HOD',        sub: 'Create a new Head of Department account' },
-    admin:      { title: 'Register Admin',      sub: 'Create a new administrator account' },
-    department: { title: 'Create Department',   sub: 'Add a new academic department', extra: loadDeptList },
-    subject:        { title: 'Create Subject',          sub: 'Add a new exam subject' },
+    student:        { title: 'Register Student',         sub: 'Create a new student account' },
+    hod:            { title: 'Register HOD',             sub: 'Create a new Head of Department account' },
+    admin:          { title: 'Register Admin',           sub: 'Create a new administrator account' },
+    department:     { title: 'Create Department',        sub: 'Add a new academic department', extra: loadDeptList },
+    subject:        { title: 'Create Subject',           sub: 'Add a new exam subject' },
     examcontroller: { title: 'Register Exam Controller', sub: 'Create an Exam Controller account' },
+    principal:      { title: 'Register Principal',       sub: 'Create a Principal account with hall ticket signature' },
 };
 function showPanel(id, btn) {
     document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.getElementById(id + 'Panel').classList.add('active');
+    const panelEl = document.getElementById(id + 'Panel');
+    if (panelEl) panelEl.classList.add('active');
     if (btn) btn.classList.add('active');
     const meta = PANEL_META[id];
     if (meta) {
@@ -1062,17 +1395,30 @@ async function loadDeptList() {
             wrap.innerHTML = '<div class="empty-state"><div class="empty-icon">🏢</div><p>No departments yet</p><small>Create the first one using the form</small></div>';
             return;
         }
-        wrap.innerHTML = `<table>
+        wrap.innerHTML = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table>
             <thead><tr><th>#</th><th>Department Name</th><th>Status</th></tr></thead>
             <tbody>${depts.map((d,i) => `<tr>
                 <td style="color:var(--muted);font-size:12px;">${i+1}</td>
                 <td style="font-weight:500;">${esc(d.deptName)}</td>
                 <td><span class="pill pill-green">Active</span></td>
             </tr>`).join('')}</tbody>
-        </table>`;
+        </table></div>`;
     } catch {
         wrap.innerHTML = '<div class="empty-state"><p>Failed to load</p></div>';
     }
+}
+
+// ── Password show/hide toggle ──────────────────────────────────
+function toggleAdminPw(id, btn) {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+    const showing = inp.type === 'text';
+    inp.type = showing ? 'password' : 'text';
+    btn.querySelector('svg').innerHTML = showing
+        ? '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'
+        : '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>' +
+          '<path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>' +
+          '<line x1="1" y1="1" x2="23" y2="23"/>';
 }
 
 // ── Password helpers ───────────────────────────────────────────
@@ -1099,24 +1445,37 @@ function checkMatch(cv, pv, inputId, hintId) {
 }
 
 // ── Photo preview ──────────────────────────────────────────────
+// Store cropped blobs per input
+const _croppedBlobs = {};
+
 function bindPhoto(inputId, previewId, placeholderId, hintId) {
     document.getElementById(inputId)?.addEventListener('change', function() {
         const file = this.files[0]; if (!file) return;
         if (!['image/jpeg','image/jpg','image/png','image/webp'].includes(file.type)) {
             setHint(hintId, '✗ Only JPG/PNG/WEBP allowed', 'bad'); this.value=''; return;
         }
-        if (file.size > 2*1024*1024) {
-            setHint(hintId, '✗ File must be under 2 MB', 'bad'); this.value=''; return;
+        if (file.size > 5*1024*1024) {
+            setHint(hintId, '✗ File must be under 5 MB', 'bad'); this.value=''; return;
         }
         const r = new FileReader();
         r.onload = e => {
-            const prev = document.getElementById(previewId);
-            prev.src = e.target.result; prev.classList.add('show');
-            document.getElementById(placeholderId).style.display='none';
-            setHint(hintId, '✓ ' + file.name, 'ok');
+            openPhotoCropModal(e.target.result, (blob, dataUrl) => {
+                _croppedBlobs[inputId] = blob;
+                const prev = document.getElementById(previewId);
+                if (prev) { prev.src = dataUrl; prev.classList.add('show'); }
+                const ph = document.getElementById(placeholderId);
+                if (ph) ph.style.display = 'none';
+                setHint(hintId, '✓ Cropped & ready to upload', 'ok');
+            });
         };
         r.readAsDataURL(file);
     });
+}
+
+function getCroppedFile(inputId, fallbackInputId) {
+    if (_croppedBlobs[inputId])
+        return new File([_croppedBlobs[inputId]], 'photo.png', { type: 'image/png' });
+    return document.getElementById(fallbackInputId || inputId)?.files[0] || null;
 }
 function setHint(id, text, cls) {
     const el = document.getElementById(id);
@@ -1146,14 +1505,18 @@ function setLoading(btnId, on, label) {
 // ── Confirm modal ──────────────────────────────────────────────
 function openModal(title, body, onConfirm) {
     document.getElementById('modalTitle').textContent = title;
-    document.getElementById('modalBody').textContent  = body;
+    document.getElementById('modalBody').innerHTML    = body;
     document.getElementById('confirmModal').classList.add('open');
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    if (confirmBtn) confirmBtn.style.display = '';
     pendingAction = onConfirm;
 }
 function closeModal() {
     document.getElementById('confirmModal').classList.remove('open');
-    setLoading('modalConfirmBtn', false, 'Confirm');
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    if (confirmBtn) { confirmBtn.style.display = ''; setLoading('modalConfirmBtn', false, 'Confirm'); }
     pendingAction = null;
+    _admEditCroppedBlob = null;
 }
 document.getElementById('confirmModal').addEventListener('click', e => {
     if (e.target === e.currentTarget) closeModal();
@@ -1181,7 +1544,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('admUsername')?.addEventListener('input', function(){ this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,''); });
     // Exam Controller bindings
     bindPw('ecPw','ecPwBar','ecPwHint','ecCpw','ecCpwHint');
+    bindPw('prPw','prPwBar','prPwHint','prCpw','prCpwHint');
     bindPhoto('ecPhoto','ecPhotoPreview','ecPhotoPlaceholder','ecPhotoHint');
+    bindPhoto('prPhoto','prPhotoPreview','prPhotoPlaceholder','prPhotoHint');
     document.getElementById('ecEmpId')?.addEventListener('input', function(){ this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,''); });
     document.getElementById('ecUsername')?.addEventListener('input', function(){ this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,''); });
 });
@@ -1190,17 +1555,21 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById('studentForm').addEventListener('submit', async e => {
     e.preventDefault();
     const d = getForm('studentForm');
+    d.name = d.firstName;
+    const studentFullName = [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ');
     if (d.password !== d.confirmPassword) { showAlert('student','Passwords do not match.','error'); return; }
     if (d.password.length < 8)            { showAlert('student','Password must be at least 8 characters.','error'); return; }
+    if (!d.gender)                         { showAlert('student','Please select a gender.','error'); return; }
+    if (!d.bloodGroup)                     { showAlert('student','Please select a blood group.','error'); return; }
     delete d.confirmPassword;
 
-    openModal('Register Student: ' + d.name, 'Department will be assigned. Semester starts at 1.', async () => {
+    openModal('Register Student: ' + studentFullName, 'Department will be assigned. Semester starts at 1.', async () => {
         setLoading('studentSubmitBtn', true);
         try {
             const res  = await fetch(`${API_BASE_URL}/auth/register/student`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
             const data = await res.json();
             if (res.status === 201) {
-                const ph = document.getElementById('studentPhoto')?.files[0];
+                const ph = getCroppedFile('studentPhoto');
                 if (ph && data.studentId) {
                     const fd = new FormData(); fd.append('photo', ph);
                     await fetch(`${API_BASE_URL}/photos/upload/student/${data.studentId}`, { method:'POST', body:fd }).catch(()=>{});
@@ -1220,26 +1589,29 @@ document.getElementById('studentForm').addEventListener('submit', async e => {
 // ── HOD FORM ──────────────────────────────────────────────────
 document.getElementById('hodForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const adminUser = document.getElementById('hodAdminUser').value.trim();
-    const adminPass = document.getElementById('hodAdminPass').value;
-    if (!adminUser || !adminPass) { showAlert('hod','Admin credentials are required.','error'); return; }
-
     const d = getForm('hodForm');
+    d.name = d.firstName;
+    const hodFullName = [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ');
     if (d.password !== d.confirmPassword) { showAlert('hod','Passwords do not match.','error'); return; }
     if (d.password.length < 8)            { showAlert('hod','Password must be at least 8 characters.','error'); return; }
+    if (!d.gender)                         { showAlert('hod','Please select a gender.','error'); return; }
+    if (!d.bloodGroup)                     { showAlert('hod','Please select a blood group.','error'); return; }
     delete d.confirmPassword;
 
-    openModal('Register HOD: ' + d.name, 'Username: ' + d.username, async () => {
+    const adminPw = await requireAdminPw();
+    if (!adminPw) return;
+
+    openModal('Register HOD: ' + hodFullName, 'Username: ' + d.username, async () => {
         setLoading('hodSubmitBtn', true);
         try {
             const res  = await fetch(`${API_BASE_URL}/auth/register/hod`, {
                 method:'POST',
-                headers:{'Content-Type':'application/json','X-Admin-Username':adminUser,'X-Admin-Password':adminPass},
+                headers:{'Content-Type':'application/json','X-Admin-Username':currentUser.username,'X-Admin-Password':adminPw},
                 body:JSON.stringify(d)
             });
             const data = await res.json();
             if (res.status === 201) {
-                const ph = document.getElementById('hodPhoto')?.files[0];
+                const ph = getCroppedFile('hodPhoto');
                 if (ph && data.hodId) {
                     const fd = new FormData(); fd.append('photo', ph);
                     await fetch(`${API_BASE_URL}/photos/upload/hod/${data.hodId}`, { method:'POST', body:fd }).catch(()=>{});
@@ -1259,17 +1631,24 @@ document.getElementById('hodForm').addEventListener('submit', async e => {
 document.getElementById('adminForm').addEventListener('submit', async e => {
     e.preventDefault();
     const d = getForm('adminForm');
+    d.name = d.firstName;
+    const adminFullName = [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ');
     if (d.password !== d.confirmPassword) { showAlert('admin','Passwords do not match.','error'); return; }
     if (d.password.length < 8)            { showAlert('admin','Password must be at least 8 characters.','error'); return; }
+    if (!d.gender)                         { showAlert('admin','Please select a gender.','error'); return; }
+    if (!d.bloodGroup)                     { showAlert('admin','Please select a blood group.','error'); return; }
     delete d.confirmPassword;
 
-    openModal('Register Admin: ' + d.name, 'Username: ' + d.username + ' · ' + d.designation, async () => {
+    const adminPw = await requireAdminPw();
+    if (!adminPw) return;
+
+    openModal('Register Admin: ' + adminFullName, 'Username: ' + d.username + ' · ' + d.designation, async () => {
         setLoading('adminSubmitBtn', true);
         try {
-            const res  = await fetch(`${API_BASE_URL}/auth/register/admin`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
+            const res  = await fetch(`${API_BASE_URL}/auth/register/admin`, { method:'POST', headers:{'Content-Type':'application/json','X-Admin-Username':currentUser.username,'X-Admin-Password':adminPw}, body:JSON.stringify(d) });
             const data = await res.json();
             if (res.status === 201) {
-                const ph = document.getElementById('adminPhoto')?.files[0];
+                const ph = getCroppedFile('adminPhoto');
                 if (ph && data.adminId) {
                     const fd = new FormData(); fd.append('photo', ph);
                     await fetch(`${API_BASE_URL}/photos/upload/admin/${data.adminId}`, { method:'POST', body:fd }).catch(()=>{});
@@ -1341,17 +1720,21 @@ function esc(v) {
 document.getElementById('examcontrollerForm').addEventListener('submit', async e => {
     e.preventDefault();
     const d = getForm('examcontrollerForm');
+    d.name = d.firstName;
+    const ecFullName = [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ');
     if (d.password !== d.confirmPassword) { showAlert('examcontroller','Passwords do not match.','error'); return; }
     if (d.password.length < 8)            { showAlert('examcontroller','Password must be at least 8 characters.','error'); return; }
+    if (!d.gender)                         { showAlert('examcontroller','Please select a gender.','error'); return; }
+    if (!d.bloodGroup)                     { showAlert('examcontroller','Please select a blood group.','error'); return; }
     delete d.confirmPassword;
 
-    openModal('Register Exam Controller: ' + d.name, 'Username: ' + d.username + ' · ' + (d.designation||'Controller of Examinations'), async () => {
+    openModal('Register Exam Controller: ' + ecFullName, 'Username: ' + d.username + ' · ' + (d.designation||'Controller of Examinations'), async () => {
         setLoading('ecSubmitBtn', true);
         try {
             const res  = await fetch(`${API_BASE_URL}/exam-controller/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(d) });
             const data = await res.json();
             if (res.status === 201) {
-                const ph = document.getElementById('ecPhoto')?.files[0];
+                const ph = getCroppedFile('ecPhoto');
                 if (ph && data.controllerId) {
                     const fd = new FormData(); fd.append('photo', ph);
                     await fetch(`${API_BASE_URL}/exam-controller/${data.controllerId}/upload-photo`, { method:'POST', body:fd }).catch(()=>{});
@@ -1367,7 +1750,604 @@ document.getElementById('examcontrollerForm').addEventListener('submit', async e
     });
 });
 
+
+// ── PRINCIPAL FORM ────────────────────────────────────────────
+document.getElementById('principalForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const d = getForm('principalForm');
+    d.name = d.firstName;
+    const principalFullName = [d.firstName, d.middleName, d.lastName].filter(Boolean).join(' ');
+    if (d.password !== d.confirmPassword) { showAlert('principal','Passwords do not match.','error'); return; }
+    if (d.password.length < 8)            { showAlert('principal','Password must be at least 8 characters.','error'); return; }
+    if (!d.gender)                         { showAlert('principal','Please select a gender.','error'); return; }
+    if (!d.bloodGroup)                     { showAlert('principal','Please select a blood group.','error'); return; }
+    delete d.confirmPassword;
+
+    const adminPw = await requireAdminPw();
+    if (!adminPw) return;
+
+    openModal('Register Principal: ' + principalFullName, 'Username: ' + d.username + ' · ' + (d.designation||'Principal'), async () => {
+        setLoading('prSubmitBtn', true);
+        try {
+            const res  = await fetch(`${API_BASE_URL}/auth/register/principal`, {
+                method:'POST',
+                headers:{
+                    'Content-Type':'application/json',
+                    'X-Admin-Username': currentUser.username,
+                    'X-Admin-Password': adminPw
+                },
+                body: JSON.stringify(d)
+            });
+            const data = await res.json();
+            if (res.status === 201) {
+                const ph = getCroppedFile('prPhoto');
+                if (ph && data.principalId) {
+                    const fd = new FormData(); fd.append('photo', ph);
+                    await fetch(`${API_BASE_URL}/photos/upload/principal/${data.principalId}`, { method:'POST', body:fd }).catch(()=>{});
+                }
+                showAlert('principal','✓ Principal registered! They can now log in via login.html','success');
+                e.target.reset();
+                document.getElementById('prPwBar').className='pw-bar';
+                document.getElementById('prPhotoPreview').classList.remove('show');
+                document.getElementById('prPhotoPlaceholder').style.display='';
+            } else { showAlert('principal', data.error || 'Registration failed.', 'error'); }
+        } catch { showAlert('principal','Server error.','error'); }
+        finally  { setLoading('prSubmitBtn', false, 'Register Principal'); }
+    });
+});
+
+// ── ADMIN PROFILE PANEL ────────────────────────────────────────
+async function loadAdminProfile() {
+    const body = document.getElementById('adminProfDetailsBody');
+    try {
+        const id  = currentUser.adminId || currentUser.id;
+        const res = await fetch(`${API_BASE_URL}/profile/admin/${id}`);
+        const d   = await res.json();
+
+        const fullName = d.name || '—';
+        const initial  = (d.name || '?').charAt(0).toUpperCase();
+
+        // ── Sidebar chip ──────────────────────────────────────
+        const avatarWrap = document.getElementById('sidebarAvatarWrap');
+        if (d.photoUrl) {
+            avatarWrap.innerHTML = `<img src="${API_BASE_URL}${esc(d.photoUrl)}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+            avatarWrap.innerHTML = `<span id="sidebarAvatar" style="font-size:15px;font-weight:700;color:#fff;">${initial}</span>`;
+        }
+        document.getElementById('sidebarName').textContent = fullName;
+        const desigEl = document.getElementById('sidebarDesig');
+        if (desigEl) desigEl.textContent = d.designation || 'Administrator';
+        const empIdEl = document.getElementById('sidebarEmpId');
+        const empIdVal = document.getElementById('sidebarEmpIdVal');
+        if (empIdEl && d.employeeId) { empIdVal.textContent = d.employeeId; empIdEl.style.display = 'block'; }
+        const emailEl = document.getElementById('sidebarEmail');
+        if (emailEl && d.email) { emailEl.textContent = d.email; emailEl.style.display = 'block'; }
+
+        // ── Profile panel (if still present) ─────────────────
+        if (!body) { window._adminProfId = id; window._adminProfData = d; return; }
+        body.innerHTML = '<div class="empty-state"><p>Loading…</p></div>';
+
+        const wrap = document.getElementById('adminProfAvatarWrap');
+        if (wrap) {
+            if (d.photoUrl) {
+                wrap.innerHTML = `<img src="${API_BASE_URL}${esc(d.photoUrl)}?t=${Date.now()}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentNode.innerHTML='<span style=\\'font-size:28px;font-weight:700;color:var(--accent);\\'>${initial}</span>'">`;
+            } else {
+                wrap.innerHTML = `<span style="font-size:28px;font-weight:700;color:var(--accent);">${initial}</span>`;
+            }
+        }
+        const pn = document.getElementById('adminProfName'); if (pn) pn.textContent = fullName;
+        const pr = document.getElementById('adminProfRole'); if (pr) pr.textContent = d.designation || 'Administrator';
+        const pi = document.getElementById('adminProfId');   if (pi) pi.textContent = d.employeeId ? `ID: ${d.employeeId}` : '';
+
+        window._adminProfId   = id;
+        window._adminProfData = d;
+
+        const row = (label, value) => value ? `
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-bottom:1px solid var(--border);">
+                <span style="font-size:13px;color:var(--muted);font-weight:500;">${label}</span>
+                <span style="font-size:13.5px;font-weight:600;color:var(--text);">${esc(String(value))}</span>
+            </div>` : '';
+
+        body.innerHTML =
+            row('Name', fullName) +
+            row('Employee ID', d.employeeId) +
+            row('Designation', d.designation) +
+            row('Date of Birth', d.dateOfBirth) +
+            row('Phone', d.phone) +
+            row('Email', d.email);
+
+    } catch(e) {
+        body.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Failed to load: ${e.message}</p></div>`;
+    }
+}
+
+function openAdminEditProfile() {
+    const d = window._adminProfData || {};
+    const id = window._adminProfId || (currentUser.adminId || currentUser.id);
+    const photoUrl = d.photoUrl ? `${API_BASE_URL}${d.photoUrl}?t=${Date.now()}` : '';
+
+    document.getElementById('confirmModal').classList.add('open');
+    document.getElementById('modalTitle').textContent = 'Edit Profile';
+    document.getElementById('modalBody').innerHTML = `
+    <div style="padding:4px 0 16px;">
+        <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:10px;min-width:110px;">
+                <div id="admEditAvatarWrap" style="width:90px;height:90px;border-radius:50%;background:var(--accent-light);border:3px solid var(--accent);overflow:hidden;display:flex;align-items:center;justify-content:center;">
+                    ${photoUrl ? `<img src="${esc(photoUrl)}" style="width:100%;height:100%;object-fit:cover;" alt="Profile photo">` : `<span style="font-size:32px;font-weight:700;color:var(--accent);">${(d.name||'A').charAt(0).toUpperCase()}</span>`}
+                </div>
+                <label style="cursor:pointer;font-size:12px;color:var(--accent);font-weight:600;text-align:center;">
+                    📷 Change Photo
+                    <input type="file" id="admEditPhotoFile" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="admEditPreviewPhoto(this)">
+                </label>
+                <button type="button" onclick="admEditUploadPhoto(${id})" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;width:100%;font-family:'Inter',sans-serif;">Upload</button>
+            </div>
+            <div style="flex:1;min-width:240px;">
+                <div id="admEditMsg" style="display:none;padding:8px 12px;border-radius:8px;font-size:12.5px;font-weight:500;margin-bottom:12px;"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                    <div class="field"><label>First Name</label><input type="text" id="admEditFirstName" class="field input" style="padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" value="${esc(d.name||'')}"></div>
+                    <div class="field"><label>Last Name</label><input type="text" id="admEditLastName" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" value="${esc(d.lastName||'')}"></div>
+                </div>
+                <div class="field" style="margin-bottom:10px;"><label>Middle Name <span style="font-size:10px;color:var(--muted);font-weight:400;">(optional)</span></label><input type="text" id="admEditMiddleName" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" value="${esc(d.middleName||'')}"></div>
+                <div class="field" style="margin-bottom:10px;"><label>Designation</label><input type="text" id="admEditDesignation" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" value="${esc(d.designation||'')}"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+                    <div class="field"><label>Phone</label><input type="tel" id="admEditPhone" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" maxlength="10" value="${esc(d.phone||'')}"></div>
+                    <div class="field"><label>Date of Birth</label><input type="date" id="admEditDob" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" value="${esc(d.dateOfBirth||'')}"></div>
+                </div>
+                <div style="background:var(--input-bg);border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--muted);">
+                    <b style="color:var(--text);">Email:</b> ${esc(d.email||'')} &nbsp;|&nbsp; <b style="color:var(--text);">ID:</b> ${esc(d.employeeId||'')}
+                </div>
+                <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;">Change Password <span style="font-size:10px;font-weight:400;text-transform:none;">— leave blank to keep current</span></div>
+                <div class="field" style="margin-bottom:10px;"><label>Current Password</label><input type="password" id="admEditCurrentPw" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" placeholder="Current password"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+                    <div class="field"><label>New Password</label><input type="password" id="admEditNewPw" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" placeholder="Min. 8 characters"></div>
+                    <div class="field"><label>Confirm Password</label><input type="password" id="admEditConfirmPw" style="width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-size:13px;font-family:'Inter',sans-serif;outline:none;" placeholder="Re-enter password"></div>
+                </div>
+                <button type="button" id="admSaveProfileBtn" onclick="saveAdminProfile(${id})" class="btn btn-primary" style="width:100%;padding:11px;font-size:14px;font-weight:700;justify-content:center;">
+                  <div class="spinner"></div><span class="btn-label">Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </div>`;
+    // Override modal confirm button to be hidden (we use inline Save)
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    if (confirmBtn) confirmBtn.style.display = 'none';
+    pendingAction = null;
+}
+
+let _admEditCroppedBlob = null;
+function admEditPreviewPhoto(input) {
+    const file = input.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = e => openPhotoCropModal(e.target.result, (blob, dataUrl) => {
+        _admEditCroppedBlob = blob;
+        document.getElementById('admEditAvatarWrap').innerHTML = `<img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" alt="Profile photo">`;
+    });
+    r.readAsDataURL(file);
+}
+
+async function admEditUploadPhoto(id) {
+    const file = _admEditCroppedBlob
+        ? new File([_admEditCroppedBlob], 'photo.png', { type:'image/png' })
+        : document.getElementById('admEditPhotoFile')?.files[0];
+    if (!file) { alert('Please select and crop a photo first.'); return; }
+    const fd = new FormData(); fd.append('photo', file);
+    try {
+        const res  = await fetch(`${API_BASE_URL}/profile/admin/${id}/photo`, { method:'POST', body:fd });
+        const data = await res.json();
+        admShowMsg(data.success ? '✓ Photo uploaded!' : (data.error || 'Upload failed'), data.success ? 'success' : 'error');
+    } catch(e) { admShowMsg('Upload error: ' + e.message, 'error'); }
+}
+
+async function saveAdminProfile(id) {
+    const firstName  = document.getElementById('admEditFirstName')?.value.trim()||'';
+    const lastName   = document.getElementById('admEditLastName')?.value.trim()||'';
+    const middleName = document.getElementById('admEditMiddleName')?.value.trim()||'';
+    const designation= document.getElementById('admEditDesignation')?.value.trim()||'';
+    const phone      = document.getElementById('admEditPhone')?.value.trim()||'';
+    const dob        = document.getElementById('admEditDob')?.value||'';
+    const currentPw  = document.getElementById('admEditCurrentPw')?.value||'';
+    const newPw      = document.getElementById('admEditNewPw')?.value||'';
+    const confirmPw  = document.getElementById('admEditConfirmPw')?.value||'';
+
+    if (phone && !/^\d{10}$/.test(phone)) { admShowMsg('Phone must be 10 digits.','error'); return; }
+    if (newPw) {
+        if (!currentPw) { admShowMsg('Enter current password to set a new one.','error'); return; }
+        if (newPw.length < 8) { admShowMsg('New password must be at least 8 characters.','error'); return; }
+        if (newPw !== confirmPw) { admShowMsg('Passwords do not match.','error'); return; }
+    }
+
+    const body = { name: firstName, middleName, lastName, phone, dateOfBirth:dob, designation };
+    if (newPw) { body.currentPassword = currentPw; body.newPassword = newPw; }
+
+    const saveBtn = document.getElementById('admSaveProfileBtn');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.classList.add('loading'); }
+    try {
+        // Upload photo first if one is pending
+        if (_admEditCroppedBlob) {
+            const photoFile = new File([_admEditCroppedBlob], 'photo.png', { type:'image/png' });
+            const fd = new FormData(); fd.append('photo', photoFile);
+            try {
+                const pr  = await fetch(`${API_BASE_URL}/profile/admin/${id}/photo`, { method:'POST', body:fd });
+                const pd  = await pr.json();
+                if (pd.success && pd.photoUrl) {
+                    const photoSrc = `${API_BASE_URL}${pd.photoUrl}?t=${Date.now()}`;
+                    const imgHtml  = `<img src="${photoSrc}" style="width:100%;height:100%;object-fit:cover;" alt="Profile photo">`;
+                    const editAv = document.getElementById('admEditAvatarWrap'); if (editAv) editAv.innerHTML = imgHtml;
+                    const hdrAv  = document.getElementById('adminProfAvatarWrap'); if (hdrAv) hdrAv.innerHTML = imgHtml;
+                    if (window._adminProfData) window._adminProfData.photoUrl = pd.photoUrl;
+                }
+            } catch(pe) { /* silent */ }
+            _admEditCroppedBlob = null;
+        }
+        const res  = await fetch(`${API_BASE_URL}/profile/admin/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+        const data = await res.json();
+        if (data.success) {
+            admShowMsg('✓ Profile updated successfully!','success');
+            currentUser.name = body.name; currentUser.middleName = body.middleName; currentUser.lastName = body.lastName;
+            sessionStorage.setItem('user', JSON.stringify(currentUser));
+            const fullDisplayName = [body.name, body.middleName, body.lastName].filter(Boolean).join(' ');
+            const sn = document.getElementById('sidebarName'); if (sn) sn.textContent = fullDisplayName;
+            setTimeout(() => { closeModal(); loadAdminProfile(); }, 1200);
+        } else { admShowMsg(data.error || 'Update failed','error'); }
+    } catch(e) { admShowMsg('Error: ' + e.message,'error'); }
+    finally { if (saveBtn) { saveBtn.disabled = false; saveBtn.classList.remove('loading'); } }
+}
+
+function admShowMsg(msg, type) {
+    const el = document.getElementById('admEditMsg');
+    if (!el) return;
+    el.textContent = msg; el.style.display = 'block';
+    el.style.background = type==='success' ? '#f0fdf4' : '#fef2f2';
+    el.style.color      = type==='success' ? '#15803d'  : '#dc2626';
+    el.style.border     = type==='success' ? '1px solid #bbf7d0' : '1px solid #fecaca';
+    setTimeout(() => el.style.display='none', 5000);
+}
+
+// Restore modal confirm button when other modals open
+const _origOpenModal = window.openModal;
+
 function logout() { sessionStorage.clear(); window.location.href='index.html'; }
+
+// ── Admin password prompt (in-memory cache) ───────────────────
+let _cachedAdminPw = null;
+let _adminPwResolve = null;
+
+function requireAdminPw() {
+    if (_cachedAdminPw) return Promise.resolve(_cachedAdminPw);
+    return new Promise((resolve) => {
+        _adminPwResolve = resolve;
+        document.getElementById('adminPwInput').value = '';
+        document.getElementById('adminPwAlert').className = 'alert';
+        document.getElementById('adminPwModal').classList.add('open');
+        setTimeout(() => document.getElementById('adminPwInput').focus(), 100);
+    });
+}
+
+function cancelAdminPw() {
+    document.getElementById('adminPwModal').classList.remove('open');
+    _adminPwResolve = null;
+}
+
+async function submitAdminPw() {
+    const pw = document.getElementById('adminPwInput').value;
+    if (!pw) {
+        const al = document.getElementById('adminPwAlert');
+        document.getElementById('adminPwAlertText').textContent = 'Password is required.';
+        al.className = 'alert show error'; return;
+    }
+    // Verify against backend before caching
+    setLoading('adminPwConfirmBtn', true);
+    try {
+        const res = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ loginId: currentUser.username, password: pw })
+        });
+        if (res.ok) {
+            _cachedAdminPw = pw;
+            document.getElementById('adminPwModal').classList.remove('open');
+            if (_adminPwResolve) { _adminPwResolve(pw); _adminPwResolve = null; }
+        } else {
+            const al = document.getElementById('adminPwAlert');
+            document.getElementById('adminPwAlertText').textContent = 'Incorrect password. Please try again.';
+            al.className = 'alert show error';
+        }
+    } catch {
+        document.getElementById('adminPwAlertText').textContent = 'Server error. Try again.';
+        document.getElementById('adminPwAlert').className = 'alert show error';
+    } finally { setLoading('adminPwConfirmBtn', false, 'Confirm'); }
+}
+
+document.getElementById('adminPwInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') submitAdminPw(); });
+document.getElementById('adminPwModal')?.addEventListener('click', e => { if (e.target === e.currentTarget) cancelAdminPw(); });
 </script>
+<!-- ═══════════════════════════════════════════════════════
+     SHARED PHOTO CROP MODAL — inject before </body>
+     Usage:
+       openPhotoCropModal(dataUrl, callbackFn)
+       callback receives cropped 400×400 PNG blob
+     ═══════════════════════════════════════════════════════ -->
+
+
+<!-- ═══════════════════════════════════════════════════════
+     SHARED PHOTO CROP MODAL — 35mm × 45mm passport ratio
+     Usage: openPhotoCropModal(dataUrl, callbackFn)
+     Callback receives (blob, dataUrl) of cropped image
+     Output: 350×450 PNG (7:9 ratio = 35mm:45mm)
+     ═══════════════════════════════════════════════════════ -->
+<div id="photoCropModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;align-items:center;justify-content:center;">
+  <div style="background:#1e293b;border-radius:18px;padding:22px;width:720px;max-width:97vw;box-shadow:0 25px 60px rgba(0,0,0,.6);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#fff;">Crop Profile Photo</div>
+        <div style="font-size:11.5px;color:#94a3b8;margin-top:2px;">Drag to reposition · Scroll or slider to zoom · 35mm × 45mm passport size</div>
+      </div>
+      <button type="button" onclick="closePhotoCropModal()" style="background:rgba(255,255,255,.1);border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:#94a3b8;display:flex;align-items:center;justify-content:center;">×</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:start;">
+      <!-- Crop canvas -->
+      <div>
+        <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.08em;margin-bottom:6px;">DRAG IMAGE · 35 × 45 mm PASSPORT FRAME</div>
+        <div style="position:relative;display:inline-block;width:100%;">
+          <canvas id="pcCropCanvas" style="display:block;width:100%;border-radius:10px;cursor:grab;touch-action:none;background:#0f172a;"
+            onmousedown="pcDragStart(event)" onmousemove="pcDragMove(event)"
+            onmouseup="pcDragEnd()" onmouseleave="pcDragEnd()" onwheel="pcWheel(event)"></canvas>
+          <canvas id="pcCropOverlay" style="position:absolute;top:0;left:0;width:100%;border-radius:10px;pointer-events:none;"></canvas>
+        </div>
+      </div>
+
+      <!-- Preview + controls -->
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.08em;margin-bottom:6px;">LIVE PREVIEW</div>
+          <!-- 35:45 = 7:9 aspect ratio preview -->
+          <div style="width:100%;aspect-ratio:7/9;background:#fff;border-radius:6px;overflow:hidden;border:2px solid rgba(124,58,237,.5);display:flex;align-items:center;justify-content:center;">
+            <canvas id="pcPreviewCanvas" style="width:100%;height:100%;"></canvas>
+          </div>
+          <div id="pcSizeInfo" style="font-size:10px;color:#64748b;margin-top:5px;text-align:center;">35mm × 45mm → 350×450px</div>
+        </div>
+
+        <!-- Zoom -->
+        <div>
+          <div style="font-size:10px;font-weight:600;color:#64748b;letter-spacing:.08em;margin-bottom:8px;">ZOOM</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <button type="button" onclick="pcZoom(-0.1)" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">−</button>
+            <input type="range" id="pcZoomSlider" min="1" max="5" step="0.05" value="1"
+              oninput="pcZoomSlider(this.value)" style="flex:1;accent-color:#7c3aed;cursor:pointer;">
+            <button type="button" onclick="pcZoom(0.1)" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">+</button>
+          </div>
+          <div id="pcZoomLabel" style="font-size:10px;color:#64748b;text-align:center;margin-top:4px;">100%</div>
+        </div>
+
+        <!-- Size badge -->
+        <div style="background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:11px;font-weight:600;color:#a78bfa;">📏 Passport Size</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:3px;">35 mm × 45 mm</div>
+          <div style="font-size:10px;color:#94a3b8;">Output: 350 × 450 px</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button type="button" onclick="pcReset()" style="background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);color:#94a3b8;border-radius:8px;padding:8px;font-size:12px;cursor:pointer;font-family:inherit;">↺ Reset</button>
+          <button type="button" onclick="pcApply()" style="background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:10px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">✓ Use This Crop</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Shared Photo Crop Engine — 35mm×45mm (7:9 ratio) ─────────
+const PC = {
+  img:null, scale:1, minScale:1,
+  offsetX:0, offsetY:0,
+  dragging:false, lastX:0, lastY:0,
+  canvasW:0, canvasH:0,
+  cropW:0, cropH:0,
+  animFrame:null, callback:null
+};
+
+// 35mm:45mm = 7:9
+const PC_RATIO_W = 7, PC_RATIO_H = 9;
+const PC_OUT_W = 350, PC_OUT_H = 450;
+
+function openPhotoCropModal(src, callback) {
+  PC.callback = callback;
+  document.getElementById('photoCropModal').style.display = 'flex';
+  const img = new Image();
+  img.onload = () => { PC.img = img; setTimeout(pcInitCanvas, 50); };
+  img.src = src;
+}
+
+function closePhotoCropModal() {
+  document.getElementById('photoCropModal').style.display = 'none';
+  if (PC.animFrame) cancelAnimationFrame(PC.animFrame);
+}
+
+function pcInitCanvas() {
+  const canvas  = document.getElementById('pcCropCanvas');
+  const overlay = document.getElementById('pcCropOverlay');
+  const w = canvas.parentElement.offsetWidth || 420;
+
+  // Crop frame: width = 78% of canvas, height = width * (9/7)
+  PC.cropW = Math.round(w * 0.78);
+  PC.cropH = Math.round(PC.cropW * PC_RATIO_H / PC_RATIO_W);
+
+  // Canvas height = crop height + margin
+  const margin = Math.round(PC.cropH * 0.18);
+  const h = PC.cropH + margin * 2;
+
+  canvas.width  = w; canvas.height  = h;
+  overlay.width = w; overlay.height = h;
+  PC.canvasW = w; PC.canvasH = h;
+
+  // minScale = cover: image fills the crop frame
+  const minScaleX = PC.cropW / PC.img.width;
+  const minScaleY = PC.cropH / PC.img.height;
+  PC.minScale = Math.max(minScaleX, minScaleY);
+  PC.scale    = PC.minScale;
+
+  // Center image in canvas
+  PC.offsetX = (w - PC.img.width  * PC.scale) / 2;
+  PC.offsetY = (h - PC.img.height * PC.scale) / 2;
+
+  // Zoom slider
+  const sl = document.getElementById('pcZoomSlider');
+  sl.min = PC.minScale; sl.max = PC.minScale * 4;
+  sl.step = PC.minScale * 0.01; sl.value = PC.scale;
+  document.getElementById('pcZoomLabel').textContent = '100%';
+
+  pcClamp(); pcRender();
+}
+
+function pcClamp() {
+  const cx = (PC.canvasW - PC.cropW) / 2;
+  const cy = (PC.canvasH - PC.cropH) / 2;
+  const iw = PC.img.width * PC.scale;
+  const ih = PC.img.height * PC.scale;
+  if (PC.offsetX > cx)            PC.offsetX = cx;
+  if (PC.offsetX + iw < cx + PC.cropW) PC.offsetX = cx + PC.cropW - iw;
+  if (PC.offsetY > cy)            PC.offsetY = cy;
+  if (PC.offsetY + ih < cy + PC.cropH) PC.offsetY = cy + PC.cropH - ih;
+}
+
+function pcRender() {
+  if (PC.animFrame) cancelAnimationFrame(PC.animFrame);
+  PC.animFrame = requestAnimationFrame(() => {
+    const canvas  = document.getElementById('pcCropCanvas');
+    const overlay = document.getElementById('pcCropOverlay');
+    if (!canvas || !overlay || !PC.img) return;
+    const ctx  = canvas.getContext('2d');
+    const octx = overlay.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const cw = PC.cropW, ch = PC.cropH;
+    const cx = (W - cw) / 2, cy = (H - ch) / 2;
+
+    // Draw image
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 0, W, H);
+    ctx.drawImage(PC.img, PC.offsetX, PC.offsetY,
+                  PC.img.width * PC.scale, PC.img.height * PC.scale);
+
+    // Dark overlay outside crop rectangle
+    octx.clearRect(0, 0, W, H);
+    octx.fillStyle = 'rgba(0,0,0,0.68)';
+    octx.fillRect(0, 0, W, H);
+    octx.clearRect(cx, cy, cw, ch);
+
+    // Crop border
+    octx.strokeStyle = '#7c3aed';
+    octx.lineWidth = 2;
+    octx.strokeRect(cx, cy, cw, ch);
+
+    // Corner handles
+    const hl = 14;
+    octx.strokeStyle = '#a78bfa';
+    octx.lineWidth = 3;
+    [[cx,cy],[cx+cw,cy],[cx,cy+ch],[cx+cw,cy+ch]].forEach(([x,y]) => {
+      const dx = x===cx ? 1 : -1, dy = y===cy ? 1 : -1;
+      octx.beginPath();
+      octx.moveTo(x+dx*hl, y); octx.lineTo(x, y); octx.lineTo(x, y+dy*hl);
+      octx.stroke();
+    });
+
+    // Rule-of-thirds grid
+    octx.strokeStyle = 'rgba(255,255,255,0.18)';
+    octx.lineWidth = 0.8;
+    [1,2].forEach(i => {
+      octx.beginPath(); octx.moveTo(cx+cw/3*i, cy); octx.lineTo(cx+cw/3*i, cy+ch); octx.stroke();
+      octx.beginPath(); octx.moveTo(cx, cy+ch/3*i); octx.lineTo(cx+cw, cy+ch/3*i); octx.stroke();
+    });
+
+    // Size label inside frame
+    octx.fillStyle = 'rgba(124,58,237,0.7)';
+    octx.fillRect(cx, cy+ch-16, cw, 16);
+    octx.fillStyle = '#fff';
+    octx.font = '9px monospace';
+    octx.textAlign = 'center';
+    octx.fillText('35 mm × 45 mm', cx+cw/2, cy+ch-5);
+
+    // Live preview
+    const prev = document.getElementById('pcPreviewCanvas');
+    if (prev) {
+      prev.width = PC_OUT_W; prev.height = PC_OUT_H;
+      const pctx = prev.getContext('2d');
+      pctx.fillStyle = '#fff';
+      pctx.fillRect(0, 0, PC_OUT_W, PC_OUT_H);
+      pctx.drawImage(canvas, cx, cy, cw, ch, 0, 0, PC_OUT_W, PC_OUT_H);
+    }
+
+    const pct = Math.round((PC.scale / PC.minScale) * 100);
+    const info = document.getElementById('pcSizeInfo');
+    if (info) info.textContent = Math.round(cw)+'×'+Math.round(ch)+'px → '+PC_OUT_W+'×'+PC_OUT_H+'px';
+  });
+}
+
+function pcDragStart(e) { PC.dragging=true; PC.lastX=e.clientX; PC.lastY=e.clientY; e.currentTarget.style.cursor='grabbing'; }
+function pcDragMove(e) {
+  if (!PC.dragging || !PC.img) return;
+  PC.offsetX += e.clientX - PC.lastX; PC.offsetY += e.clientY - PC.lastY;
+  PC.lastX = e.clientX; PC.lastY = e.clientY;
+  pcClamp(); pcRender();
+}
+function pcDragEnd(e) { PC.dragging=false; if(e&&e.currentTarget) e.currentTarget.style.cursor='grab'; }
+
+function pcZoomSlider(val) {
+  const ns = parseFloat(val);
+  const cx = PC.canvasW/2, cy = PC.canvasH/2;
+  const r = ns / PC.scale;
+  PC.offsetX = cx - r*(cx - PC.offsetX);
+  PC.offsetY = cy - r*(cy - PC.offsetY);
+  PC.scale = ns;
+  document.getElementById('pcZoomLabel').textContent = Math.round((ns/PC.minScale)*100)+'%';
+  pcClamp(); pcRender();
+}
+function pcZoom(delta) {
+  const sl = document.getElementById('pcZoomSlider');
+  const ns = Math.min(Math.max(PC.scale + delta*PC.minScale, PC.minScale), PC.minScale*4);
+  sl.value = ns; pcZoomSlider(ns);
+}
+function pcWheel(e) { e.preventDefault(); pcZoom(e.deltaY < 0 ? 0.08 : -0.08); }
+function pcReset() {
+  if (!PC.img) return;
+  PC.scale = PC.minScale;
+  PC.offsetX = (PC.canvasW - PC.img.width  * PC.scale) / 2;
+  PC.offsetY = (PC.canvasH - PC.img.height * PC.scale) / 2;
+  document.getElementById('pcZoomSlider').value = PC.scale;
+  document.getElementById('pcZoomLabel').textContent = '100%';
+  pcClamp(); pcRender();
+}
+
+function pcApply() {
+  if (!PC.img) return;
+  const canvas = document.getElementById('pcCropCanvas');
+  const cw = PC.cropW, ch = PC.cropH;
+  const cx = (PC.canvasW - cw) / 2, cy = (PC.canvasH - ch) / 2;
+  const scaleX = canvas.width / canvas.offsetWidth;
+  const scaleY = canvas.height / canvas.offsetHeight;
+
+  // Extract at full canvas resolution
+  const raw = document.createElement('canvas');
+  raw.width  = Math.round(cw * scaleX);
+  raw.height = Math.round(ch * scaleY);
+  raw.getContext('2d').drawImage(canvas,
+    Math.round(cx*scaleX), Math.round(cy*scaleY),
+    raw.width, raw.height, 0, 0, raw.width, raw.height);
+
+  // Output at 350×450 (35mm×45mm at 10px/mm)
+  const out = document.createElement('canvas');
+  out.width = PC_OUT_W; out.height = PC_OUT_H;
+  const octx = out.getContext('2d');
+  octx.fillStyle = '#fff';
+  octx.fillRect(0, 0, PC_OUT_W, PC_OUT_H);
+  octx.drawImage(raw, 0, 0, raw.width, raw.height, 0, 0, PC_OUT_W, PC_OUT_H);
+
+  out.toBlob(blob => {
+    if (PC.callback) PC.callback(blob, out.toDataURL('image/png'));
+    closePhotoCropModal();
+  }, 'image/png', 0.95);
+}
+</script>
+
 </body>
 </html>

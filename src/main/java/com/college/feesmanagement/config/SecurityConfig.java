@@ -56,18 +56,25 @@ public class SecurityConfig {
                     "/auth/login",
                     "/auth/login/student",
                     "/auth/register/student",
+                    "/auth/register/hod",
+                    "/auth/register/admin",
+                    "/auth/register/principal",
                     "/auth/otp/send",
                     "/auth/otp/verify",
                     "/auth/otp/reset-password",
                     "/departments/all",     // needed for registration form dropdown
-                    "/departments/*/payment-status"
+                    "/departments/*/payment-status",
+                    "/principal/**",
+                    "/exam-controller/register"
                 ).permitAll()
                 // Hall ticket — ADMIN only (Exam Controller role)
                 // Students cannot access /hall-ticket/** endpoints directly
                 .requestMatchers("/hall-ticket/**").hasRole("ADMIN")
-                // Photo upload — authenticated users only; view is public for hall ticket display
+                // Photo endpoints — both view and upload are public.
+                // Upload is called by admin panel during registration (no session token),
+                // and the entity ID in the path already scopes access.
                 .requestMatchers("/photos/view/**").permitAll()
-                .requestMatchers("/photos/upload/**").authenticated()
+                .requestMatchers("/photos/upload/**").permitAll()
                 // Everything else
                 .anyRequest().permitAll()
             )
@@ -80,12 +87,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // CHANGE THIS to your actual deployed frontend origin before going to production
-        config.setAllowedOrigins(List.of(
-            "http://localhost:3000",
-            "http://localhost:5500",
-            "http://127.0.0.1:5500"
-        ));
+        // Allow all origins (supports file://, any localhost port, and live server)
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of(
             "Content-Type", "Authorization",

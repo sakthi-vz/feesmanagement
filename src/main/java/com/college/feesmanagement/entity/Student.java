@@ -17,6 +17,10 @@ public class Student {
     @NotBlank(message = "Name is required")
     private String name;
 
+    private String middleName;
+
+    private String lastName;
+
     @NotBlank(message = "Roll number is required")
     @Column(unique = true)
     private String rollNo;
@@ -44,6 +48,14 @@ public class Student {
     @Column(name = "photo_path")
     private String photoPath;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false)
+    private Gender gender;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "blood_group", nullable = false)
+    private BloodGroup bloodGroup;
+
     @OneToOne
     @JoinColumn(name = "user_id", unique = true)
     @JsonIgnoreProperties({"student", "hod", "admin", "password"})
@@ -51,6 +63,8 @@ public class Student {
 
     public enum EligibilityStatus { ELIGIBLE, NOT_ELIGIBLE }
     public enum ProgrammeStatus { ACTIVE, COMPLETED }
+    public enum Gender { MALE, FEMALE, OTHER }
+    public enum BloodGroup { A_POS, A_NEG, B_POS, B_NEG, AB_POS, AB_NEG, O_POS, O_NEG }
 
     public Student() {}
 
@@ -58,6 +72,10 @@ public class Student {
     public void setStudentId(Long id) { this.studentId = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getMiddleName() { return middleName; }
+    public void setMiddleName(String middleName) { this.middleName = middleName; }
+    public String getLastName() { return lastName; }
+    public void setLastName(String lastName) { this.lastName = lastName; }
     public String getRollNo() { return rollNo; }
     public void setRollNo(String rollNo) { this.rollNo = rollNo; }
     public Department getDepartment() { return department; }
@@ -75,6 +93,10 @@ public class Student {
     public void setDateOfBirth(LocalDate dob) { this.dateOfBirth = dob; }
     public String getPhotoPath() { return photoPath; }
     public void setPhotoPath(String photoPath) { this.photoPath = photoPath; }
+    public Gender getGender() { return gender; }
+    public void setGender(Gender gender) { this.gender = gender; }
+    public BloodGroup getBloodGroup() { return bloodGroup; }
+    public void setBloodGroup(BloodGroup bloodGroup) { this.bloodGroup = bloodGroup; }
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }
 
